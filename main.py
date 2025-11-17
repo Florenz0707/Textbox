@@ -220,6 +220,7 @@ def delate(folder_path, quality=85):
 
 def generate_and_save_images(character_name):
     now_file = os.path.dirname(os.path.abspath(__file__))
+    print("正在加载")
     
     # 获取当前角色的表情数量
     emotion_count = mahoshojo[character_name]["emotion_count"]
@@ -243,6 +244,7 @@ def generate_and_save_images(character_name):
                 # 使用绝对路径保存生成的图片
             save_path = os.path.join(os.path.join(magic_cut_folder), f"{character_name} ({img_num}).jpg")
             result.convert("RGB").save(save_path)
+    print("加载完成")
 
 
 def switch_character(new_index):
@@ -250,7 +252,7 @@ def switch_character(new_index):
     if 0 <= new_index < len(character_list):
         current_character_index = new_index
         character_name = get_current_character()
-        print(f"已切换到角色: {character_name}，正在加载")
+        print(f"已切换到角色: {character_name}")
         
         # 生成并保存图片
         generate_and_save_images(character_name)
