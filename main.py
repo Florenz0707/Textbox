@@ -29,7 +29,7 @@ Ctrl+0: 显示当前角色
 Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
 Enter: 生成图片
 Esc: 退出程序
-Tab: 清除图片
+Ctrl+Tab: 清除图片
       
 程序说明：
 这个版本的程序占用体积较小，但是需要预加载，初次更换角色后需要等待数秒才能正常使用，望周知（
@@ -515,7 +515,7 @@ keyboard.add_hotkey('ctrl+e', lambda: switch_character(11))  # 角色11
 keyboard.add_hotkey('ctrl+r', lambda: switch_character(12))  # 角色12
 keyboard.add_hotkey('ctrl+t', lambda: switch_character(13))  # 角色13
 keyboard.add_hotkey('ctrl+y', lambda: switch_character(0)) 
-keyboard.add_hotkey('Tab', lambda: delate(magic_cut_folder))
+keyboard.add_hotkey('ctrl+Tab', lambda: delate(magic_cut_folder))
 
 for i in range(1,10):
     keyboard.add_hotkey(f'alt+{i}', lambda idx=i: get_expression(idx))
