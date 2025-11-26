@@ -1,8 +1,9 @@
 # filename: text_fit_draw.py
+import os
 from io import BytesIO
 from typing import Tuple, Union, Literal
+
 from PIL import Image, ImageDraw, ImageFont
-import os
 
 Align = Literal["left", "center", "right"]
 VAlign = Literal["top", "middle", "bottom"]
@@ -14,38 +15,40 @@ IMAGE_SETTINGS = {
     "resize_ratio": 0.7
 }
 
+
 def compress_image(image: Image.Image) -> Image.Image:
     """压缩图像大小"""
     width, height = image.size
     new_width = int(width * IMAGE_SETTINGS["resize_ratio"])
     new_height = int(height * IMAGE_SETTINGS["resize_ratio"])
-    
+
     # 限制最大尺寸
     if new_width > IMAGE_SETTINGS["max_width"]:
         ratio = IMAGE_SETTINGS["max_width"] / new_width
         new_width, new_height = IMAGE_SETTINGS["max_width"], int(new_height * ratio)
-    
+
     if new_height > IMAGE_SETTINGS["max_height"]:
         ratio = IMAGE_SETTINGS["max_height"] / new_height
         new_height, new_width = IMAGE_SETTINGS["max_height"], int(new_width * ratio)
-    
+
     return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
+
 def draw_text_auto(
-    image_source: Union[str, Image.Image],
-    top_left: Tuple[int, int],
-    bottom_right: Tuple[int, int],
-    text: str,
-    color: Tuple[int, int, int] = (0, 0, 0),
-    max_font_height: int | None = None,
-    font_path: str | None = None,
-    align: Align = "center",
-    valign: VAlign = "middle",
-    line_spacing: float = 0.15,
-    bracket_color: Tuple[int, int, int] = (137,177,251),  # 中括号及内部内容颜色
-    image_overlay: Union[str, Image.Image,None]=None,
-    role_name: str = "unknown",  # 添加角色名称参数
-    text_configs_dict: dict = None,  # 添加文字配置字典参数
+        image_source: Union[str, Image.Image],
+        top_left: Tuple[int, int],
+        bottom_right: Tuple[int, int],
+        text: str,
+        color: Tuple[int, int, int] = (0, 0, 0),
+        max_font_height: int | None = None,
+        font_path: str | None = None,
+        align: Align = "center",
+        valign: VAlign = "middle",
+        line_spacing: float = 0.15,
+        bracket_color: Tuple[int, int, int] = (137, 177, 251),  # 中括号及内部内容颜色
+        image_overlay: Union[str, Image.Image, None] = None,
+        role_name: str = "unknown",  # 添加角色名称参数
+        text_configs_dict: dict = None,  # 添加文字配置字典参数
 ) -> bytes:
     """
     在指定矩形内自适应字号绘制文本；
@@ -57,7 +60,7 @@ def draw_text_auto(
         img = image_source.copy()
     else:
         img = Image.open(image_source).convert("RGBA")
-    
+
     # 压缩底图
     draw = ImageDraw.Draw(img)
 
@@ -159,7 +162,7 @@ def draw_text_auto(
         font = _load_font(best_size)
 
     # --- 6. 解析着色片段 ---
-    def parse_color_segments(s: str,in_bracket: bool) -> Tuple[list[tuple[str, Tuple[int, int, int]]],bool]:
+    def parse_color_segments(s: str, in_bracket: bool) -> Tuple[list[tuple[str, Tuple[int, int, int]]], bool]:
         segs: list[tuple[str, Tuple[int, int, int]]] = []
         buf = ""
         for ch in s:
@@ -179,7 +182,7 @@ def draw_text_auto(
                 buf += ch
         if buf:
             segs.append((buf, bracket_color if in_bracket else color))
-        return segs,in_bracket
+        return segs, in_bracket
 
     # --- 7. 垂直对齐 ---
     if valign == "top":
@@ -200,10 +203,10 @@ def draw_text_auto(
             x = x1 + (region_w - line_w) // 2
         else:
             x = x2 - line_w
-        segments,in_bracket = parse_color_segments(ln,in_bracket)
+        segments, in_bracket = parse_color_segments(ln, in_bracket)
         for seg_text, seg_color in segments:
             if seg_text:
-                draw.text((x+4, y+4), seg_text, font=font, fill=(0,0,0))# 文字阴影
+                draw.text((x + 4, y + 4), seg_text, font=font, fill=(0, 0, 0))  # 文字阴影
                 draw.text((x, y), seg_text, font=font, fill=seg_color)
                 x += int(draw.textlength(seg_text, font=font))
         y += best_line_h
@@ -221,23 +224,23 @@ def draw_text_auto(
     if text_configs_dict and role_name in text_configs_dict:
         shadow_offset = (2, 2)  # 阴影偏移量
         shadow_color = (0, 0, 0)  # 黑色阴影
-        
+
         for config in text_configs_dict[role_name]:
             text = config["text"]
             position = config["position"]
             font_color = config["font_color"]
             font_size = config["font_size"]
-        
+
             # 使用绝对路径加载字体文件
             font_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "font3.ttf")
             font = ImageFont.truetype(font_path, font_size)
-            
+
             # 计算阴影位置
             shadow_position = (position[0] + shadow_offset[0], position[1] + shadow_offset[1])
-            
+
             # 先绘制阴影文字
             draw.text(shadow_position, text, fill=shadow_color, font=font)
-            
+
             # 再绘制主文字（覆盖在阴影上方）
             draw.text(position, text, fill=font_color, font=font)
     img = compress_image(img)

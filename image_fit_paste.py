@@ -1,26 +1,28 @@
 # filename: image_fit_paste.py
+import os
 from io import BytesIO
 from typing import Tuple, Literal, Union
-from PIL import Image, ImageDraw, ImageFont
-import os
+
+from PIL import Image
 
 Align = Literal["left", "center", "right"]
 VAlign = Literal["top", "middle", "bottom"]
 
+
 def paste_image_auto(
-    image_source: Union[str, Image.Image],
-    top_left: Tuple[int, int],
-    bottom_right: Tuple[int, int],
-    content_image: Image.Image,
-    align: Align = "center",
-    valign: VAlign = "middle",
-    padding: int = 0,
-    allow_upscale: bool = False,
-    keep_alpha: bool = True,
-    image_overlay: Union[str, Image.Image,None]=None,
-    max_image_size: Tuple[int, int] = (None, None),  # 添加最大图片尺寸限制 (width, height)
-    role_name: str = "unknown",  # 添加角色名称参数
-    text_configs_dict: dict = None,  # 添加文字配置字典参数
+        image_source: Union[str, Image.Image],
+        top_left: Tuple[int, int],
+        bottom_right: Tuple[int, int],
+        content_image: Image.Image,
+        align: Align = "center",
+        valign: VAlign = "middle",
+        padding: int = 0,
+        allow_upscale: bool = False,
+        keep_alpha: bool = True,
+        image_overlay: Union[str, Image.Image, None] = None,
+        max_image_size: Tuple[int, int] = (None, None),  # 添加最大图片尺寸限制 (width, height)
+        role_name: str = "unknown",  # 添加角色名称参数
+        text_configs_dict: dict = None,  # 添加文字配置字典参数
 ) -> bytes:
     """
     在指定矩形内放置一张图片（content_image），按比例缩放至“最大但不超过”该矩形。
@@ -68,7 +70,7 @@ def paste_image_auto(
 
     if not allow_upscale:
         scale = min(1.0, scale)
-    
+
     # 应用最大图片尺寸限制
     max_width, max_height = max_image_size
     if max_width is not None:

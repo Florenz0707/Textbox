@@ -1,0 +1,13 @@
+[project]
+name = "text-box-of-mahoushoujo-no-majosaiban"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "keyboard>=0.13.5",
+    "pillow>=12.0.0",
+    "pip>=25.3",
+    "pyperclip>=1.11.0",
+    "pywin32>=311",
+]
