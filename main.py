@@ -2,14 +2,21 @@ import io
 import os
 import random
 import time
-
+import getpass
 import keyboard
+import psutil
 import pyperclip
 import win32clipboard
-from PIL import Image
+import win32gui
+import win32process
 
+from PIL import Image
 from image_fit_paste import paste_image_auto
 from text_fit_draw import draw_text_auto
+
+# 前台窗口白名单
+whitelist = ["TIM.exe", "WeChat.exe", "Weixin.exe", "WeChatApp.exe", "QQ.exe"]
+enable_whitelist = True
 
 # 角色配置
 # 1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
@@ -60,7 +67,7 @@ AUTO_PASTE_IMAGE = True
 AUTO_SEND_IMAGE = True
 
 # 角色配置字典
-mahoshojo = {
+characters = {
     "ema": {"emotion_count": 8, "font": "font3.ttf"},  # 樱羽艾玛
     "hiro": {"emotion_count": 6, "font": "font3.ttf"},  # 二阶堂希罗
     "sherri": {"emotion_count": 7, "font": "font3.ttf"},  # 橘雪莉
@@ -171,7 +178,6 @@ text_configs_dict = {
         {"text": "井", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
     ],
 }
-import getpass
 
 # 获取当前用户名
 username = getpass.getuser()
@@ -189,7 +195,7 @@ magic_cut_folder = os.path.join(user_documents, '魔裁')
 os.makedirs(magic_cut_folder, exist_ok=True)
 
 # 角色列表（按顺序对应1-13的角色）
-character_list = list(mahoshojo.keys())
+character_list = list(characters.keys())
 
 
 # 获取当前角色信息
@@ -199,11 +205,11 @@ def get_current_character():
 
 def get_current_font():
     # 返回完整的字体文件绝对路径
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), mahoshojo[get_current_character()]["font"])
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), characters[get_current_character()]["font"])
 
 
 def get_current_emotion_count():
-    return mahoshojo[get_current_character()]["emotion_count"]
+    return characters[get_current_character()]["emotion_count"]
 
 
 def remove_pic_cache(folder_path):
@@ -216,7 +222,7 @@ def generate_and_save_images(character_name):
     now_file = os.path.dirname(os.path.abspath(__file__))
 
     # 获取当前角色的表情数量
-    emotion_count = mahoshojo[character_name]["emotion_count"]
+    emotion_count = characters[character_name]["emotion_count"]
 
     for filename in os.listdir(magic_cut_folder):
         if filename.startswith(character_name):
@@ -264,14 +270,11 @@ def show_current_character():
 # 显示当前角色信息
 show_current_character()
 
-# 测试：生成当前角色的图片
-generate_and_save_images(get_current_character())
-
 
 def get_expression(idx):
     global expression
     character_name = get_current_character()
-    if idx <= mahoshojo[character_name]["emotion_count"]:
+    if idx <= characters[character_name]["emotion_count"]:
         print(f"已切换至第{idx}个表情")
         expression = idx
 
@@ -285,7 +288,7 @@ def get_random_value():
     emotion_count = get_current_emotion_count()
     total_images = 16 * emotion_count
 
-    if expression:
+    if expression is not None:
         random_value_tmp = random.randint((expression - 1) * 16 + 1, expression * 16)
         random_value = random_value_tmp
         expression = None
@@ -380,24 +383,39 @@ def try_get_image() -> Image.Image | None:
     return None
 
 
-def Start():
-    print("Start generate...")
+def get_window_exe_name():
+    try:
+        hwnd = win32gui.GetForegroundWindow()
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        process = psutil.Process(pid)
+        exe_path = process.exe()
+        return os.path.basename(exe_path)
+    except Exception as e:
+        print(f"获取文件名时发生错误：{e}")
+        return None
 
+
+def Start():
+    if enable_whitelist and get_window_exe_name() not in whitelist:
+        keyboard.send(HOTKEY)
+        return
+
+    print("Start generate...")
     character_name = get_current_character()
     address = os.path.join(magic_cut_folder, get_random_value() + ".jpg")
     baseimage_file = address
-    print(character_name, str(1 + (random_value // 16)), "背景", str(random_value % 16))
+    print(f"角色：{character_name}，表情：{str(1 + random_value // 16)}，背景： {str(random_value % 16)}")
 
     # 文本框左上角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    text_box_topleft = (mahoshojo_postion[0], mahoshojo_postion[1])
+    text_box_top_left = (mahoshojo_postion[0], mahoshojo_postion[1])
     # 文本框右下角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    image_box_bottomright = (mahoshojo_over[0], mahoshojo_over[1])
+    image_box_bottom_right = (mahoshojo_over[0], mahoshojo_over[1])
     text = cut_all_and_get_text()
     image = try_get_image()
 
-    if text == "" and image is None:
+    if (text is None or len(text) == 0) and image is None:
         print("no text or image")
         return
 
@@ -409,8 +427,8 @@ def Start():
             png_bytes = paste_image_auto(
                 image_source=baseimage_file,
                 image_overlay=None,
-                top_left=text_box_topleft,
-                bottom_right=image_box_bottomright,
+                top_left=text_box_top_left,
+                bottom_right=image_box_bottom_right,
                 content_image=image,
                 align="center",
                 valign="middle",
@@ -431,8 +449,8 @@ def Start():
             png_bytes = draw_text_auto(
                 image_source=baseimage_file,
                 image_overlay=None,
-                top_left=text_box_topleft,
-                bottom_right=image_box_bottomright,
+                top_left=text_box_top_left,
+                bottom_right=image_box_bottom_right,
                 text=text,
                 align="left",
                 valign='top',
@@ -464,28 +482,28 @@ def Start():
 
 if __name__ == "__main__":
     print("""角色说明:
-    1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
-    5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
-    11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
+1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
+5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
+11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
 
-    快捷键说明:
-    Ctrl+1 到 Ctrl+9: 切换角色1-9
-    Ctrl+q: 切换角色10
-    Ctrl+w: 切换角色11
-    Ctrl+e: 切换角色12
-    Ctrl+r: 切换角色13
-    Ctrl+t: 切换角色14
-    Ctrl+0: 显示当前角色
-    Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
-    Enter: 生成图片
-    Esc: 退出程序
-    Ctrl+Tab: 清除图片
+快捷键说明:
+Ctrl+1 到 Ctrl+9: 切换角色1-9
+Ctrl+q: 切换角色10
+Ctrl+w: 切换角色11
+Ctrl+e: 切换角色12
+Ctrl+r: 切换角色13
+Ctrl+t: 切换角色14
+Ctrl+0: 显示当前角色
+Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
+Enter: 生成图片
+Esc: 退出程序
+Ctrl+Tab: 清除图片
 
-    程序说明：
-    这个版本的程序占用体积较小，但是需要预加载，初次更换角色后需要等待数秒才能正常使用，望周知（
-    按Tab可清除生成图片，降低占用空间，但清除图片后需重启才能正常使用
-    感谢各位的支持
-    """
+程序说明：
+这个版本的程序占用体积较小，但是需要预加载，初次更换角色后需要等待数秒才能正常使用，望周知（
+按Tab可清除生成图片，降低占用空间，但清除图片后需重启才能正常使用
+感谢各位的支持
+"""
           )
     # 角色切换快捷键绑定
     # 按Ctrl+1 到 Ctrl+9: 切换角色1-9
@@ -500,8 +518,8 @@ if __name__ == "__main__":
     keyboard.add_hotkey('ctrl+y', lambda: switch_character(0))
     keyboard.add_hotkey('ctrl+Tab', lambda: remove_pic_cache(magic_cut_folder))
 
-    for random_value_tmp in range(1, 10):
-        keyboard.add_hotkey(f'alt+{random_value_tmp}', lambda idx=random_value_tmp: get_expression(idx))
+    for i in range(1, 10):
+        keyboard.add_hotkey(f'alt+{i}', lambda idx=i: get_expression(idx))
 
     # 绑定 Ctrl+Alt+H 作为全局热键
     ok = keyboard.add_hotkey(HOTKEY, Start, suppress=BLOCK_HOTKEY or HOTKEY == SEND_HOTKEY)

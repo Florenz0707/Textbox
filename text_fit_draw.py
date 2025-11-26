@@ -64,6 +64,7 @@ def draw_text_auto(
     # 压缩底图
     draw = ImageDraw.Draw(img)
 
+    img_overlay = None
     if image_overlay is not None:
         if isinstance(image_overlay, Image.Image):
             img_overlay = image_overlay.copy()
@@ -86,12 +87,12 @@ def draw_text_auto(
             return ImageFont.load_default()
 
     # --- 3. 文本包行 ---
-    def wrap_lines(txt: str, font: ImageFont.FreeTypeFont, max_w: int) -> list[str]:
-        lines: list[str] = []
+    def wrap_lines(txt: str, image_font: ImageFont.FreeTypeFont, max_w: int) -> list[str]:
+        text_lines: list[str] = []
         for para in txt.splitlines() or [""]:
             has_space = (" " in para)
             units = para.split(" ") if has_space else list(para)
-            buf = ""
+            str_buf = ""
 
             def unit_join(a: str, b: str) -> str:
                 if not a:
@@ -99,34 +100,34 @@ def draw_text_auto(
                 return (a + " " + b) if has_space else (a + b)
 
             for u in units:
-                trial = unit_join(buf, u)
-                w = draw.textlength(trial, font=font)
+                trial = unit_join(str_buf, u)
+                w = draw.textlength(trial, font=image_font)
                 if w <= max_w:
-                    buf = trial
+                    str_buf = trial
                 else:
-                    if buf:
-                        lines.append(buf)
+                    if str_buf:
+                        text_lines.append(str_buf)
                     if has_space and len(u) > 1:
                         tmp = ""
                         for ch in u:
-                            if draw.textlength(tmp + ch, font=font) <= max_w:
+                            if draw.textlength(tmp + ch, font=image_font) <= max_w:
                                 tmp += ch
                             else:
                                 if tmp:
-                                    lines.append(tmp)
+                                    text_lines.append(tmp)
                                 tmp = ch
-                        buf = tmp
+                        str_buf = tmp
                     else:
-                        if draw.textlength(u, font=font) <= max_w:
-                            buf = u
+                        if draw.textlength(u, font=image_font) <= max_w:
+                            str_buf = u
                         else:
-                            lines.append(u)
-                            buf = ""
-            if buf != "":
-                lines.append(buf)
-            if para == "" and (not lines or lines[-1] != ""):
-                lines.append("")
-        return lines
+                            text_lines.append(u)
+                            str_buf = ""
+            if str_buf != "":
+                text_lines.append(str_buf)
+            if para == "" and (not text_lines or text_lines[-1] != ""):
+                text_lines.append("")
+        return text_lines
 
     # --- 4. 测量 ---
     def measure_block(lines: list[str], font: ImageFont.FreeTypeFont) -> tuple[int, int, int]:
@@ -162,27 +163,27 @@ def draw_text_auto(
         font = _load_font(best_size)
 
     # --- 6. 解析着色片段 ---
-    def parse_color_segments(s: str, in_bracket: bool) -> Tuple[list[tuple[str, Tuple[int, int, int]]], bool]:
-        segs: list[tuple[str, Tuple[int, int, int]]] = []
-        buf = ""
+    def parse_color_segments(s: str, _in_bracket: bool) -> Tuple[list[tuple[str, Tuple[int, int, int]]], bool]:
+        text_segments: list[tuple[str, Tuple[int, int, int]]] = []
+        str_buf = ""
         for ch in s:
             if ch == "[" or ch == "【":
-                if buf:
-                    segs.append((buf, bracket_color if in_bracket else color))
-                    buf = ""
-                segs.append((ch, bracket_color))
-                in_bracket = True
+                if str_buf:
+                    text_segments.append((str_buf, bracket_color if _in_bracket else color))
+                    str_buf = ""
+                text_segments.append((ch, bracket_color))
+                _in_bracket = True
             elif ch == "]" or ch == "】":
-                if buf:
-                    segs.append((buf, bracket_color))
-                    buf = ""
-                segs.append((ch, bracket_color))
-                in_bracket = False
+                if str_buf:
+                    text_segments.append((str_buf, bracket_color))
+                    str_buf = ""
+                text_segments.append((ch, bracket_color))
+                _in_bracket = False
             else:
-                buf += ch
-        if buf:
-            segs.append((buf, bracket_color if in_bracket else color))
-        return segs, in_bracket
+                str_buf += ch
+        if str_buf:
+            text_segments.append((str_buf, bracket_color if _in_bracket else color))
+        return text_segments, _in_bracket
 
     # --- 7. 垂直对齐 ---
     if valign == "top":
