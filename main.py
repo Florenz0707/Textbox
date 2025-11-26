@@ -1,54 +1,3 @@
-# 流程
-# 1 搞蒙版
-# 2 截头像
-# 3 叠头像
-# 4 嵌字
-# 5 改分辨率
-# 1 优化算法 尽量不出现两个重复表情在一块
-# 2 优化代码 md0.2s的时间太长了
-# 3 把原代码重做 他def的函数我看不懂 只能打印一次文本吗我靠
-# 4 增加多种表情包选择
-# 5 把选择的地方做的更明显一些
-# 6 加阴影
-# 7 新增：快捷键切换角色功能
-# 8 新增：限制生成图片大小功能
-
-print("""角色说明:
-1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
-5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
-11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
-
-快捷键说明:
-Ctrl+1 到 Ctrl+9: 切换角色1-9
-Ctrl+q: 切换角色10
-Ctrl+w: 切换角色11
-Ctrl+e: 切换角色12
-Ctrl+r: 切换角色13
-Ctrl+t: 切换角色14
-Ctrl+0: 显示当前角色
-Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
-Enter: 生成图片
-Esc: 退出程序
-Ctrl+Tab: 清除图片
-      
-程序说明：
-这个版本的程序占用体积较小，但是需要预加载，初次更换角色后需要等待数秒才能正常使用，望周知（
-按Tab可清除生成图片，降低占用空间，但清除图片后需重启才能正常使用
-感谢各位的支持
-
-
-"""
-      )
-
-# 角色配置
-# 1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
-# 5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
-# 11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
-current_character_index = 3  # 初始角色为橘雪莉（索引从0开始）
-
-mahoshojo_postion = [728, 355]  # 文本范围起始位置
-mahoshojo_over = [2339, 800]  # 文本范围右下角位置
-
 import io
 import os
 import random
@@ -62,9 +11,53 @@ from PIL import Image
 from image_fit_paste import paste_image_auto
 from text_fit_draw import draw_text_auto
 
-i = -1
-value_1 = -1
+# 角色配置
+# 1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
+# 5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
+# 11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
+current_character_index = 15  # 初始角色为橘雪莉（索引从0开始）
+
+mahoshojo_postion = [728, 355]  # 文本范围起始位置
+mahoshojo_over = [2339, 800]  # 文本范围右下角位置
+
+random_value_tmp = -1
+random_value = -1
 expression = None
+
+HOTKEY = "enter"
+
+# 全选快捷键, 此按键并不会监听, 而是会作为模拟输入
+# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
+SELECT_ALL_HOTKEY = "ctrl+a"
+
+# 剪切快捷键, 此按键并不会监听, 而是会作为模拟输入
+# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
+CUT_HOTKEY = "ctrl+x"
+
+# 黏贴快捷键, 此按键并不会监听, 而是会作为模拟输入
+# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
+PASTE_HOTKEY = "ctrl+v"
+
+# 发送消息快捷键, 此按键并不会监听, 而是会作为模拟输入
+# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
+SEND_HOTKEY = "enter"
+
+# 是否阻塞按键, 如果热键设置为阻塞模式, 则按下热键时不会将该按键传递给前台应用
+# 如果生成热键和发送热键相同, 则强制阻塞, 防止误触发发送消息
+# 此值为布尔值, True 或 False
+BLOCK_HOTKEY = False
+
+# 操作的间隔, 如果失效可以适当增大此数值
+# 此值为数字, 单位为秒
+DELAY = 0.1
+
+# 是否自动黏贴生成的图片(如果为否则保留图片在剪贴板, 可以手动黏贴)
+# 此值为布尔值, True 或 False
+AUTO_PASTE_IMAGE = True
+
+# 生成图片后是否自动发送(模拟回车键输入), 只有开启自动黏贴才生效
+# 此值为布尔值, True 或 False
+AUTO_SEND_IMAGE = True
 
 # 角色配置字典
 mahoshojo = {
@@ -81,7 +74,8 @@ mahoshojo = {
     "nanoka": {"emotion_count": 5, "font": "font3.ttf"},  # 黑部奈叶香
     "mago": {"emotion_count": 5, "font": "font3.ttf"},  # 宝生玛格
     "alisa": {"emotion_count": 6, "font": "font3.ttf"},  # 紫藤亚里沙
-    "coco": {"emotion_count": 5, "font": "font3.ttf"}
+    "coco": {"emotion_count": 5, "font": "font3.ttf"},
+    "momoi": {"emotion_count": 7, "font": "font3.ttf"},  # 才羽桃井
 }
 
 # 角色文字配置字典 - 每个角色对应4个文字配置
@@ -169,7 +163,13 @@ text_configs_dict = {
         {"text": "代", "position": (948, 175), "font_color": (255, 255, 255), "font_size": 92},
         {"text": "雪", "position": (1053, 117), "font_color": (255, 255, 255), "font_size": 147},
         {"text": "", "position": (0, 0), "font_color": (255, 255, 255), "font_size": 1}
-    ]
+    ],
+    "momoi": [
+        {"text": "才", "position": (759, 73), "font_color": (255, 105, 80), "font_size": 186},
+        {"text": "羽", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
+        {"text": "桃", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
+        {"text": "井", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    ],
 }
 import getpass
 
@@ -206,7 +206,7 @@ def get_current_emotion_count():
     return mahoshojo[get_current_character()]["emotion_count"]
 
 
-def delate(folder_path, quality=85):
+def remove_pic_cache(folder_path):
     for filename in os.listdir(folder_path):
         if filename.lower().endswith('.jpg'):
             os.remove(folder_path + "\\" + filename)
@@ -268,89 +268,53 @@ show_current_character()
 generate_and_save_images(get_current_character())
 
 
-def get_expression(i):
+def get_expression(idx):
     global expression
     character_name = get_current_character()
-    if i <= mahoshojo[character_name]["emotion_count"]:
-        print(f"已切换至第{i}个表情")
-        expression = i
+    if idx <= mahoshojo[character_name]["emotion_count"]:
+        print(f"已切换至第{idx}个表情")
+        expression = idx
 
 
 # 随机获取表情图片名称
 # 优化版本：使用循环替代递归，避免栈溢出风险
 # 维护上一次选择的表情类型，确保不连续选择相同表情
 def get_random_value():
-    global value_1, expression
+    global random_value_tmp, random_value, expression
     character_name = get_current_character()
     emotion_count = get_current_emotion_count()
     total_images = 16 * emotion_count
 
     if expression:
-        i = random.randint((expression - 1) * 16 + 1, expression * 16)
-        value_1 = i
+        random_value_tmp = random.randint((expression - 1) * 16 + 1, expression * 16)
+        random_value = random_value_tmp
         expression = None
-        return f"{character_name} ({i})"
+        return f"{character_name} ({random_value_tmp})"
 
     # 循环直到找到与上次不同表情的图片
     max_attempts = 100  # 防止无限循环的安全机制
     attempts = 0
 
     while attempts < max_attempts:
-        i = random.randint(1, total_images)
-        current_emotion = (i - 1) // 16
+        random_value_tmp = random.randint(1, total_images)
+        current_emotion = (random_value_tmp - 1) // 16
 
         # 处理第一次调用的情况
-        if value_1 == -1:
-            value_1 = i
-            return f"{character_name} ({i})"
+        if random_value == -1:
+            random_value = random_value_tmp
+            return f"{character_name} ({random_value_tmp})"
 
         # 检查是否与上次表情不同
-        if current_emotion != (value_1 - 1) // 16:
-            value_1 = i
-            return f"{character_name} ({i})"
+        if current_emotion != (random_value - 1) // 16:
+            random_value = random_value_tmp
+            return f"{character_name} ({random_value_tmp})"
 
         attempts += 1
 
     # 如果尝试多次仍未找到（理论上概率极低），则返回当前随机数
     # 这是一个安全机制，防止程序卡住
-    value_1 = i
-    return f"{character_name} ({i})"
-
-
-HOTKEY = "enter"
-
-# 全选快捷键, 此按键并不会监听, 而是会作为模拟输入
-# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
-SELECT_ALL_HOTKEY = "ctrl+a"
-
-# 剪切快捷键, 此按键并不会监听, 而是会作为模拟输入
-# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
-CUT_HOTKEY = "ctrl+x"
-
-# 黏贴快捷键, 此按键并不会监听, 而是会作为模拟输入
-# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
-PASTE_HOTKEY = "ctrl+v"
-
-# 发送消息快捷键, 此按键并不会监听, 而是会作为模拟输入
-# 此值为字符串, 代表热键的键名, 格式同 HOTKEY
-SEND_HOTKEY = "enter"
-
-# 是否阻塞按键, 如果热键设置为阻塞模式, 则按下热键时不会将该按键传递给前台应用
-# 如果生成热键和发送热键相同, 则强制阻塞, 防止误触发发送消息
-# 此值为布尔值, True 或 False
-BLOCK_HOTKEY = False
-
-# 操作的间隔, 如果失效可以适当增大此数值
-# 此值为数字, 单位为秒
-DELAY = 0.1
-
-# 是否自动黏贴生成的图片(如果为否则保留图片在剪贴板, 可以手动黏贴)
-# 此值为布尔值, True 或 False
-AUTO_PASTE_IMAGE = True
-
-# 生成图片后是否自动发送(模拟回车键输入), 只有开启自动黏贴才生效
-# 此值为布尔值, True 或 False
-AUTO_SEND_IMAGE = True
+    random_value = random_value_tmp
+    return f"{character_name} ({random_value_tmp})"
 
 
 def copy_png_bytes_to_clipboard(png_bytes: bytes):
@@ -421,15 +385,15 @@ def Start():
 
     character_name = get_current_character()
     address = os.path.join(magic_cut_folder, get_random_value() + ".jpg")
-    BASEIMAGE_FILE = address
-    print(character_name, str(1 + (value_1 // 16)), "背景", str(value_1 % 16))
+    baseimage_file = address
+    print(character_name, str(1 + (random_value // 16)), "背景", str(random_value % 16))
 
     # 文本框左上角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    TEXT_BOX_TOPLEFT = (mahoshojo_postion[0], mahoshojo_postion[1])
+    text_box_topleft = (mahoshojo_postion[0], mahoshojo_postion[1])
     # 文本框右下角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    IMAGE_BOX_BOTTOMRIGHT = (mahoshojo_over[0], mahoshojo_over[1])
+    image_box_bottomright = (mahoshojo_over[0], mahoshojo_over[1])
     text = cut_all_and_get_text()
     image = try_get_image()
 
@@ -443,10 +407,10 @@ def Start():
         try:
             print("Get image")
             png_bytes = paste_image_auto(
-                image_source=BASEIMAGE_FILE,
+                image_source=baseimage_file,
                 image_overlay=None,
-                top_left=TEXT_BOX_TOPLEFT,
-                bottom_right=IMAGE_BOX_BOTTOMRIGHT,
+                top_left=text_box_topleft,
+                bottom_right=image_box_bottomright,
                 content_image=image,
                 align="center",
                 valign="middle",
@@ -465,10 +429,10 @@ def Start():
 
         try:
             png_bytes = draw_text_auto(
-                image_source=BASEIMAGE_FILE,
+                image_source=baseimage_file,
                 image_overlay=None,
-                top_left=TEXT_BOX_TOPLEFT,
-                bottom_right=IMAGE_BOX_BOTTOMRIGHT,
+                top_left=text_box_topleft,
+                bottom_right=image_box_bottomright,
                 text=text,
                 align="left",
                 valign='top',
@@ -498,27 +462,52 @@ def Start():
             keyboard.send(SEND_HOTKEY)
 
 
-# 角色切换快捷键绑定
-# 按Ctrl+1 到 Ctrl+9: 切换角色1-9
-for i in range(1, 10):
-    keyboard.add_hotkey(f'ctrl+{i}', lambda idx=i: switch_character(idx))
+if __name__ == "__main__":
+    print("""角色说明:
+    1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
+    5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
+    11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
 
-# 角色10-13使用特殊快捷键
-keyboard.add_hotkey('ctrl+q', lambda: switch_character(10))  # 角色10
-keyboard.add_hotkey('ctrl+e', lambda: switch_character(11))  # 角色11
-keyboard.add_hotkey('ctrl+r', lambda: switch_character(12))  # 角色12
-keyboard.add_hotkey('ctrl+t', lambda: switch_character(13))  # 角色13
-keyboard.add_hotkey('ctrl+y', lambda: switch_character(0))
-keyboard.add_hotkey('ctrl+Tab', lambda: delate(magic_cut_folder))
+    快捷键说明:
+    Ctrl+1 到 Ctrl+9: 切换角色1-9
+    Ctrl+q: 切换角色10
+    Ctrl+w: 切换角色11
+    Ctrl+e: 切换角色12
+    Ctrl+r: 切换角色13
+    Ctrl+t: 切换角色14
+    Ctrl+0: 显示当前角色
+    Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
+    Enter: 生成图片
+    Esc: 退出程序
+    Ctrl+Tab: 清除图片
 
-for i in range(1, 10):
-    keyboard.add_hotkey(f'alt+{i}', lambda idx=i: get_expression(idx))
+    程序说明：
+    这个版本的程序占用体积较小，但是需要预加载，初次更换角色后需要等待数秒才能正常使用，望周知（
+    按Tab可清除生成图片，降低占用空间，但清除图片后需重启才能正常使用
+    感谢各位的支持
+    """
+          )
+    # 角色切换快捷键绑定
+    # 按Ctrl+1 到 Ctrl+9: 切换角色1-9
+    for random_value_tmp in range(1, 10):
+        keyboard.add_hotkey(f'ctrl+{random_value_tmp}', lambda idx=random_value_tmp: switch_character(idx))
 
-# 绑定 Ctrl+Alt+H 作为全局热键
-ok = keyboard.add_hotkey(HOTKEY, Start, suppress=BLOCK_HOTKEY or HOTKEY == SEND_HOTKEY)
+    # 角色10-13使用特殊快捷键
+    keyboard.add_hotkey('ctrl+q', lambda: switch_character(10))  # 角色10
+    keyboard.add_hotkey('ctrl+e', lambda: switch_character(11))  # 角色11
+    keyboard.add_hotkey('ctrl+r', lambda: switch_character(12))  # 角色12
+    keyboard.add_hotkey('ctrl+t', lambda: switch_character(15))  # 角色13
+    keyboard.add_hotkey('ctrl+y', lambda: switch_character(0))
+    keyboard.add_hotkey('ctrl+Tab', lambda: remove_pic_cache(magic_cut_folder))
 
-# 绑定Ctrl+0显示当前角色
-keyboard.add_hotkey('ctrl+0', show_current_character)
+    for random_value_tmp in range(1, 10):
+        keyboard.add_hotkey(f'alt+{random_value_tmp}', lambda idx=random_value_tmp: get_expression(idx))
 
-# 保持程序运行
-keyboard.wait("Esc")
+    # 绑定 Ctrl+Alt+H 作为全局热键
+    ok = keyboard.add_hotkey(HOTKEY, Start, suppress=BLOCK_HOTKEY or HOTKEY == SEND_HOTKEY)
+
+    # 绑定Ctrl+0显示当前角色
+    keyboard.add_hotkey('ctrl+0', show_current_character)
+
+    # 保持程序运行
+    keyboard.wait("Esc")

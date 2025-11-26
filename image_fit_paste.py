@@ -44,6 +44,7 @@ def paste_image_auto(
     else:
         img = Image.open(image_source).convert("RGBA")
 
+    img_overlay = None
     if image_overlay is not None:
         if isinstance(image_overlay, Image.Image):
             img_overlay = image_overlay.copy()
