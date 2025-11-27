@@ -1,5 +1,5 @@
 # filename: image_fit_paste.py
-import os
+from pathlib import Path
 from io import BytesIO
 from typing import Tuple, Literal, Union
 
@@ -10,7 +10,7 @@ VAlign = Literal["top", "middle", "bottom"]
 
 
 def paste_image_auto(
-        image_source: Union[str, Image.Image],
+        image_source: Union[str, Path, Image.Image],
         top_left: Tuple[int, int],
         bottom_right: Tuple[int, int],
         content_image: Image.Image,
@@ -19,7 +19,7 @@ def paste_image_auto(
         padding: int = 0,
         allow_upscale: bool = False,
         keep_alpha: bool = True,
-        image_overlay: Union[str, Image.Image, None] = None,
+        image_overlay: Union[str, Path, Image.Image, None] = None,
         max_image_size: Tuple[int, int] = (None, None),  # 添加最大图片尺寸限制 (width, height)
         role_name: str = "unknown",  # 添加角色名称参数
         text_configs_dict: dict = None,  # 添加文字配置字典参数
@@ -49,7 +49,8 @@ def paste_image_auto(
         if isinstance(image_overlay, Image.Image):
             img_overlay = image_overlay.copy()
         else:
-            img_overlay = Image.open(image_overlay).convert("RGBA") if os.path.isfile(image_overlay) else None
+            overlay_path = Path(image_overlay)
+            img_overlay = Image.open(overlay_path).convert("RGBA") if overlay_path.is_file() else None
 
     x1, y1 = top_left
     x2, y2 = bottom_right

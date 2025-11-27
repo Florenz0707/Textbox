@@ -1,5 +1,5 @@
 # filename: text_fit_draw.py
-import os
+from pathlib import Path
 from io import BytesIO
 from typing import Tuple, Union, Literal
 
@@ -35,18 +35,18 @@ def compress_image(image: Image.Image) -> Image.Image:
 
 
 def draw_text_auto(
-        image_source: Union[str, Image.Image],
+        image_source: Union[str, Path, Image.Image],
         top_left: Tuple[int, int],
         bottom_right: Tuple[int, int],
         text: str,
         color: Tuple[int, int, int] = (0, 0, 0),
         max_font_height: int | None = None,
-        font_path: str | None = None,
+        font_path: Union[str, Path, None] | None = None,
         align: Align = "center",
         valign: VAlign = "middle",
         line_spacing: float = 0.15,
         bracket_color: Tuple[int, int, int] = (137, 177, 251),  # 中括号及内部内容颜色
-        image_overlay: Union[str, Image.Image, None] = None,
+        image_overlay: Union[str, Path, Image.Image, None] = None,
         role_name: str = "unknown",  # 添加角色名称参数
         text_configs_dict: dict = None,  # 添加文字配置字典参数
 ) -> bytes:
@@ -69,7 +69,8 @@ def draw_text_auto(
         if isinstance(image_overlay, Image.Image):
             img_overlay = image_overlay.copy()
         else:
-            img_overlay = Image.open(image_overlay).convert("RGBA") if os.path.isfile(image_overlay) else None
+            overlay_path = Path(image_overlay)
+            img_overlay = Image.open(overlay_path).convert("RGBA") if overlay_path.is_file() else None
 
     x1, y1 = top_left
     x2, y2 = bottom_right
@@ -79,8 +80,8 @@ def draw_text_auto(
 
     # --- 2. 字体加载 ---
     def _load_font(size: int) -> ImageFont.FreeTypeFont:
-        if font_path and os.path.exists(font_path):
-            return ImageFont.truetype(font_path, size=size)
+        if font_path and Path(font_path).exists():
+            return ImageFont.truetype(str(font_path), size=size)
         try:
             return ImageFont.truetype("DejaVuSans.ttf", size=size)
         except Exception:
@@ -227,29 +228,25 @@ def draw_text_auto(
         shadow_color = (0, 0, 0)  # 黑色阴影
 
         for config in text_configs_dict[role_name]:
-            text = config["text"]
+            role_text = config["text"]
             position = config["position"]
             font_color = config["font_color"]
             font_size = config["font_size"]
 
             # 使用绝对路径加载字体文件
-            font_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "font3.ttf")
-            font = ImageFont.truetype(font_path, font_size)
+            role_font_path = Path(__file__).resolve().parent / "font3.ttf"
+            role_font = ImageFont.truetype(str(role_font_path), font_size)
 
             # 计算阴影位置
             shadow_position = (position[0] + shadow_offset[0], position[1] + shadow_offset[1])
 
             # 先绘制阴影文字
-            draw.text(shadow_position, text, fill=shadow_color, font=font)
+            draw.text(shadow_position, role_text, fill=shadow_color, font=role_font)
 
             # 再绘制主文字（覆盖在阴影上方）
-            draw.text(position, text, fill=font_color, font=font)
+            draw.text(position, role_text, fill=font_color, font=role_font)
     img = compress_image(img)
     # --- 9. 输出 PNG ---
-    # img = img.convert('RGB')
-    # buf = BytesIO()
-    # img.save(buf, format="JPEG", quality=20)
-    # return buf.getvalue()
     buf = BytesIO()
     img.save(buf, format="png")
     return buf.getvalue()

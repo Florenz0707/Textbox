@@ -1,8 +1,7 @@
-import getpass
 import io
-import os
 import random
 import time
+from pathlib import Path
 
 import keyboard
 import psutil
@@ -182,20 +181,11 @@ text_configs_dict = {
     ],
 }
 
-# 获取当前用户名
-username = getpass.getuser()
+# 构建缓存文件夹路径（项目内 cache 目录）
+magic_cut_folder = Path(__file__).resolve().parent / "cache"
 
-# 构建用户文档路径
-if os.name == 'nt':  # Windows系统
-    user_documents = os.path.join('C:\\', 'Users', username, 'Documents')
-else:  # 其他系统
-    user_documents = os.path.expanduser('~/Documents')
-
-# 构建\"魔裁\"文件夹路径
-magic_cut_folder = os.path.join(user_documents, '魔裁')
-
-# 创建\"魔裁\"文件夹（如果不存在）
-os.makedirs(magic_cut_folder, exist_ok=True)
+# 创建缓存文件夹（如果不存在）
+magic_cut_folder.mkdir(parents=True, exist_ok=True)
 
 # 角色列表（按顺序对应1-13的角色）
 character_list = list(characters.keys())
@@ -208,52 +198,59 @@ def get_current_character():
 
 def get_current_font():
     # 返回完整的字体文件绝对路径
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                        characters[get_current_character()]["font"])
+    return (Path(__file__).resolve().parent / characters[get_current_character()]["font"]).as_posix()
 
 
 def get_current_emotion_count():
     return characters[get_current_character()]["emotion_count"]
 
 
-def remove_pic_cache(folder_path):
-    for filename in os.listdir(folder_path):
-        if filename.lower().endswith('.jpg'):
-            os.remove(folder_path + "\\" + filename)
+def remove_pic_cache(folder_path: Path):
+    folder = Path(folder_path)
+    for pattern in ('*.jpg', '*.png'):
+        for file in folder.glob(pattern):
+            try:
+                file.unlink()
+            except Exception:
+                pass
 
 
-def generate_and_save_images(character_name):
-    now_file = os.path.dirname(os.path.abspath(__file__))
+def generate_and_save_images(character_name: str):
+    base_dir = Path(__file__).resolve().parent
 
     # 获取当前角色的表情数量
     emotion_count = characters[character_name]["emotion_count"]
 
-    for filename in os.listdir(magic_cut_folder):
-        if filename.startswith(character_name):
+    # 若已存在该角色的生成文件则跳过
+    try:
+        if any(p.name.startswith(f"{character_name}_") for p in magic_cut_folder.iterdir()):
             return
+    except FileNotFoundError:
+        magic_cut_folder.mkdir(parents=True, exist_ok=True)
 
     print("正在加载")
     for bg_idx in range(background_num):
         for emo_idx in range(emotion_count):
-            # 使用绝对路径加载背景图片和角色图片
-            background_path = os.path.join(now_file, "resource\\background", f"c{bg_idx + 1}.png")
-            overlay_path = os.path.join(now_file, f"resource\\character\\{character_name}\\{character_name} ({emo_idx + 1}).png")
+            # 使用路径对象加载背景图片和角色图片
+            background_path = base_dir / "resource" / "background" / f"c{bg_idx + 1}.png"
+            overlay_path = base_dir / "resource" / "character" / character_name / f"{character_name} ({emo_idx + 1}).png"
 
             background = Image.open(background_path).convert("RGBA")
             overlay = Image.open(overlay_path).convert("RGBA")
 
-            img_num = emo_idx * background_num + bg_idx + 1
+            expression_idx = emo_idx + 1
+            background_idx = bg_idx + 1
             result = background.copy()
             result.paste(overlay, (0, 134), overlay)
 
-            # 使用绝对路径保存生成的图片
-            save_path = os.path.join(os.path.join(magic_cut_folder), f"{character_name} ({img_num}).jpg")
-            result.convert("RGB").save(save_path)
+            # 保存生成的图片，命名规则：{character_name}_{expression}_{background}.png
+            save_path = magic_cut_folder / f"{character_name}_{expression_idx}_{background_idx}.png"
+            result.save(save_path)
 
     print("加载完成")
 
 
-def switch_character(new_index):
+def switch_character(new_index: int):
     global current_character_index
     if 0 <= new_index < len(character_list):
         current_character_index = new_index
@@ -273,7 +270,7 @@ def show_current_character():
     print(f"当前角色: {character_name}")
 
 
-def get_expression(idx):
+def get_expression(idx: int):
     global expression
     character_name = get_current_character()
     if idx <= characters[character_name]["emotion_count"]:
@@ -281,45 +278,39 @@ def get_expression(idx):
         expression = idx
 
 
-# 随机获取表情图片名称
-# 优化版本：使用循环替代递归，避免栈溢出风险
-# 维护上一次选择的表情类型，确保不连续选择相同表情
-def get_random_value():
+# 生成随机表情与背景索引（1-based），避免连续同表情
+def get_random_expr_bg() -> tuple[int, int]:
     global random_value_tmp, random_value, expression
-    character_name = get_current_character()
     emotion_count = get_current_emotion_count()
     total_images = 16 * emotion_count
 
+    # 如果用户指定了本次表情，则仅在该表情的 16 张背景中随机
     if expression is not None:
         random_value_tmp = random.randint((expression - 1) * 16 + 1, expression * 16)
         random_value = random_value_tmp
+        expr = (random_value_tmp - 1) // 16 + 1
+        bg = (random_value_tmp - 1) % 16 + 1
         expression = None
-        return f"{character_name} ({random_value_tmp})"
+        return expr, bg
 
-    # 循环直到找到与上次不同表情的图片
-    max_attempts = 100  # 防止无限循环的安全机制
+    max_attempts = 100
     attempts = 0
-
     while attempts < max_attempts:
         random_value_tmp = random.randint(1, total_images)
         current_emotion = (random_value_tmp - 1) // 16
 
-        # 处理第一次调用的情况
         if random_value == -1:
             random_value = random_value_tmp
-            return f"{character_name} ({random_value_tmp})"
+            break
 
-        # 检查是否与上次表情不同
         if current_emotion != (random_value - 1) // 16:
             random_value = random_value_tmp
-            return f"{character_name} ({random_value_tmp})"
-
+            break
         attempts += 1
 
-    # 如果尝试多次仍未找到（理论上概率极低），则返回当前随机数
-    # 这是一个安全机制，防止程序卡住
-    random_value = random_value_tmp
-    return f"{character_name} ({random_value_tmp})"
+    expr = (random_value_tmp - 1) // 16 + 1
+    bg = (random_value_tmp - 1) % 16 + 1
+    return expr, bg
 
 
 def copy_png_bytes_to_clipboard(png_bytes: bytes):
@@ -391,7 +382,7 @@ def get_window_exe_name():
         _, pid = win32process.GetWindowThreadProcessId(hwnd)
         process = psutil.Process(pid)
         exe_path = process.exe()
-        return os.path.basename(exe_path)
+        return Path(exe_path).name
     except Exception as e:
         print(f"获取文件名时发生错误：{e}")
         return None
@@ -404,15 +395,14 @@ def Start():
 
     print("Start generate...")
     character_name = get_current_character()
-    address = os.path.join(magic_cut_folder, get_random_value() + ".jpg")
-    baseimage_file = address
-    print(f"角色：{character_name}，表情：{str(1 + random_value // 16)}，背景： {str(random_value % 16)}")
+
+    expr, bg = get_random_expr_bg()
+    baseimage_file = magic_cut_folder / f"{character_name}_{expr}_{bg}.png"
+    print(f"角色：{character_name}，表情：{expr}，背景：{bg}")
 
     # 文本框左上角坐标 (x, y), 同时适用于图片框
-    # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
     text_box_top_left = (text_st_pos[0], text_st_pos[1])
     # 文本框右下角坐标 (x, y), 同时适用于图片框
-    # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
     image_box_bottom_right = (text_ed_pos[0], text_ed_pos[1])
     text = cut_all_and_get_text()
     image = try_get_image()

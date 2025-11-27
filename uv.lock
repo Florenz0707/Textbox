@@ -2736,7 +2736,7 @@ wheels = [
 ]
 
 [[package]]
-name = "text-box-of-mahoushoujo-no-majosaiban"
+name = "textbox"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
