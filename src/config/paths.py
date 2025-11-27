@@ -8,6 +8,9 @@ import os
 SRC_ROOT = Path(__file__).resolve().parents[1]       # .../src
 PROJECT_ROOT = Path(__file__).resolve().parents[2]   # repo root
 
+# Config directory at project root
+CONFIG_DIR = PROJECT_ROOT / "config"
+
 # Always use the repository-root resource directory
 RESOURCE_ROOT = PROJECT_ROOT / "resource"
 

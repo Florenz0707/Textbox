@@ -2,39 +2,80 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-import keyboard
+# Bootstrap to support running as a standalone script: `python src/app.py`
+# This allows falling back to absolute imports (from src....) when package context is missing.
+if __name__ == "__main__" and __package__ is None:
+    import sys
+    project_root = Path(__file__).resolve().parent.parent  # repo root
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
 
-from .config.settings import (
-    HOTKEY,
-    BLOCK_HOTKEY,
-    PASTE_HOTKEY,
-    SEND_HOTKEY,
-    ENABLE_WHITELIST,
-    WHITELIST,
-    AUTO_PASTE_IMAGE,
-    AUTO_SEND_IMAGE,
-    TEXT_ST_POS,
-    TEXT_ED_POS,
-)
-from .config.characters import characters
-from .config.paths import cache_file, font_path
-from .hotkeys.bindings import bind_all
-from .services.generator import (
-    State,
-    get_current_character,
-    get_random_expr_bg,
-    ensure_character_prepared,
-    show_current_character,
-)
-from .io.window import get_foreground_exe_name
-from .io.keys import send
-from .io.clipboard import (
-    cut_all_and_get_text,
-    try_get_image,
-    copy_png_bytes_to_clipboard,
-)
-from .services.paste_image import paste_image_to_bytes
-from .services.render_text import render_text_to_bytes
+# Prefer relative imports (package mode), fallback to absolute imports (script mode)
+try:
+    from .config.settings import (
+        HOTKEY,
+        BLOCK_HOTKEY,
+        PASTE_HOTKEY,
+        SEND_HOTKEY,
+        ENABLE_WHITELIST,
+        WHITELIST,
+        AUTO_PASTE_IMAGE,
+        AUTO_SEND_IMAGE,
+        TEXT_ST_POS,
+        TEXT_ED_POS,
+    )
+    from .config.characters import characters
+    from .config.paths import cache_file, font_path
+    from .hotkeys.bindings import bind_all
+    from .services.generator import (
+        State,
+        get_current_character,
+        get_random_expr_bg,
+        ensure_character_prepared,
+        show_current_character,
+    )
+    from .io.window import get_foreground_exe_name
+    from .io.keys import send
+    from .io.clipboard import (
+        cut_all_and_get_text,
+        try_get_image,
+        copy_png_bytes_to_clipboard,
+    )
+    from .services.paste_image import paste_image_to_bytes
+    from .services.render_text import render_text_to_bytes
+except Exception:
+    from src.config.settings import (
+        HOTKEY,
+        BLOCK_HOTKEY,
+        PASTE_HOTKEY,
+        SEND_HOTKEY,
+        ENABLE_WHITELIST,
+        WHITELIST,
+        AUTO_PASTE_IMAGE,
+        AUTO_SEND_IMAGE,
+        TEXT_ST_POS,
+        TEXT_ED_POS,
+    )
+    from src.config.characters import characters
+    from src.config.paths import cache_file, font_path
+    from src.hotkeys.bindings import bind_all
+    from src.services.generator import (
+        State,
+        get_current_character,
+        get_random_expr_bg,
+        ensure_character_prepared,
+        show_current_character,
+    )
+    from src.io.window import get_foreground_exe_name
+    from src.io.keys import send
+    from src.io.clipboard import (
+        cut_all_and_get_text,
+        try_get_image,
+        copy_png_bytes_to_clipboard,
+    )
+    from src.services.paste_image import paste_image_to_bytes
+    from src.services.render_text import render_text_to_bytes
+
 
 
 def _print_banner() -> None:
@@ -132,10 +173,18 @@ def main() -> None:
 
     suppress_flag = (BLOCK_HOTKEY or HOTKEY == SEND_HOTKEY)
     # 重新绑定主热键以遵循 suppress 策略（bindings 默认 suppress=True 已注册，此处仅保证一致性）
-    keyboard.remove_hotkey(HOTKEY)
-    keyboard.add_hotkey(HOTKEY, lambda: _start_callback(state), suppress=suppress_flag)
+    try:
+        import keyboard  # local import to avoid import-order issues in script mode
+        keyboard.remove_hotkey(HOTKEY)
+        keyboard.add_hotkey(HOTKEY, lambda: _start_callback(state), suppress=suppress_flag)
+    except Exception:
+        pass
 
-    keyboard.wait("Esc")
+    try:
+        import keyboard
+        keyboard.wait("Esc")
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

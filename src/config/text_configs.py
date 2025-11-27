@@ -1,95 +1,144 @@
 from __future__ import annotations
+from typing import Dict, List
 
-# 角色左上角“姓名部件”装饰字配置
-text_configs_dict: dict[str, list[dict]] = {
-    "nanoka": [  # 黑部奈叶香
-        {"text": "黑", "position": (759, 63), "font_color": (131, 143, 147), "font_size": 196},
-        {"text": "部", "position": (955, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "奈", "position": (1053, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "叶香", "position": (1197, 175), "font_color": (255, 255, 255), "font_size": 92}
+# Dynamic text decoration builder based on character meta (name/color)
+# Keeps existing positions/font_size templates per role; falls back to a default layout.
+
+from .characters import character_meta
+
+WHITE = (255, 255, 255)
+
+# Base templates: only position + font_size; colors and texts will be filled dynamically
+POS_TEMPLATES: Dict[str, List[Dict]] = {
+    "nanoka": [
+        {"position": (759, 63), "font_size": 196},
+        {"position": (955, 175), "font_size": 92},
+        {"position": (1053, 117), "font_size": 147},
+        {"position": (1197, 175), "font_size": 92},
     ],
-    "hiro": [  # 二阶堂希罗
-        {"text": "二", "position": (759, 63), "font_color": (239, 79, 84), "font_size": 196},
-        {"text": "阶堂", "position": (955, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "希", "position": (1143, 110), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "罗", "position": (1283, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "hiro": [
+        {"position": (759, 63), "font_size": 196},
+        {"position": (955, 175), "font_size": 92},
+        {"position": (1143, 110), "font_size": 147},
+        {"position": (1283, 175), "font_size": 92},
     ],
-    "ema": [  # 樱羽艾玛
-        {"text": "樱", "position": (759, 73), "font_color": (253, 145, 175), "font_size": 186},
-        {"text": "羽", "position": (949, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "艾", "position": (1039, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "玛", "position": (1183, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "ema": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (949, 175), "font_size": 92},
+        {"position": (1039, 117), "font_size": 147},
+        {"position": (1183, 175), "font_size": 92},
     ],
-    "sherri": [  # 橘雪莉
-        {"text": "橘", "position": (759, 73), "font_color": (137, 177, 251), "font_size": 186},
-        {"text": "雪", "position": (943, 110), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "莉", "position": (1093, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "", "position": (0, 0), "font_color": (255, 255, 255), "font_size": 1}
+    "sherri": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (943, 110), "font_size": 147},
+        {"position": (1093, 175), "font_size": 92},
+        {"position": (0, 0), "font_size": 1},
     ],
-    "anan": [  # 夏目安安
-        {"text": "夏", "position": (759, 73), "font_color": (159, 145, 251), "font_size": 186},
-        {"text": "目", "position": (949, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "安", "position": (1039, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "安", "position": (1183, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "anan": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (949, 175), "font_size": 92},
+        {"position": (1039, 117), "font_size": 147},
+        {"position": (1183, 175), "font_size": 92},
     ],
-    "noa": [  # 城崎诺亚
-        {"text": "城", "position": (759, 73), "font_color": (104, 223, 231), "font_size": 186},
-        {"text": "崎", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "诺", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "亚", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "noa": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "coco": [  # 泽渡可可
-        {"text": "泽", "position": (759, 73), "font_color": (251, 114, 78), "font_size": 186},
-        {"text": "渡", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "可", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "可", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "coco": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "alisa": [  # 紫藤亚里沙
-        {"text": "紫", "position": (759, 73), "font_color": (235, 75, 60), "font_size": 186},
-        {"text": "藤", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "亚", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "里沙", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "alisa": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "reia": [  # 莲见蕾雅
-        {"text": "莲", "position": (759, 73), "font_color": (253, 177, 88), "font_size": 186},
-        {"text": "见", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "蕾", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "雅", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "reia": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "mago": [  # 宝生玛格
-        {"text": "宝", "position": (759, 73), "font_color": (185, 124, 235), "font_size": 186},
-        {"text": "生", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "玛", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "格", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "mago": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "hanna": [  # 远野汉娜
-        {"text": "远", "position": (759, 73), "font_color": (169, 199, 30), "font_size": 186},
-        {"text": "野", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "汉", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "娜", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "hanna": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "meruru": [  # 冰上梅露露
-        {"text": "冰", "position": (759, 73), "font_color": (227, 185, 175), "font_size": 186},
-        {"text": "上", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "梅", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "露露", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "meruru": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "miria": [  # 佐伯米莉亚
-        {"text": "佐", "position": (759, 73), "font_color": (235, 207, 139), "font_size": 186},
-        {"text": "伯", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "米", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "莉亚", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+    "miria": [
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
-    "yuki": [  # 月代雪
-        {"text": "月", "position": (759, 63), "font_color": (195, 209, 231), "font_size": 196},
-        {"text": "代", "position": (948, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "雪", "position": (1053, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "", "position": (0, 0), "font_color": (255, 255, 255), "font_size": 1}
+    "yuki": [
+        {"position": (759, 63), "font_size": 196},
+        {"position": (948, 175), "font_size": 92},
+        {"position": (1053, 117), "font_size": 147},
+        {"position": (0, 0), "font_size": 1},
     ],
     "momoi": [
-        {"text": "才", "position": (759, 73), "font_color": (255, 105, 80), "font_size": 186},
-        {"text": "羽", "position": (945, 175), "font_color": (255, 255, 255), "font_size": 92},
-        {"text": "桃", "position": (1042, 117), "font_color": (255, 255, 255), "font_size": 147},
-        {"text": "井", "position": (1186, 175), "font_color": (255, 255, 255), "font_size": 92}
+        {"position": (759, 73), "font_size": 186},
+        {"position": (945, 175), "font_size": 92},
+        {"position": (1042, 117), "font_size": 147},
+        {"position": (1186, 175), "font_size": 92},
     ],
 }
+
+# Fallback template if a role has no predefined positions
+FALLBACK_TEMPLATE: List[Dict] = [
+    {"position": (759, 73), "font_size": 186},
+    {"position": (945, 175), "font_size": 92},
+    {"position": (1042, 117), "font_size": 147},
+    {"position": (1186, 175), "font_size": 92},
+]
+
+
+def _segments_from_name(name: str) -> List[str]:
+    if not name:
+        return ["", "", "", ""]
+    chars = list(name)
+    s1 = chars[0] if len(chars) >= 1 else ""
+    s2 = chars[1] if len(chars) >= 2 else ""
+    s3 = chars[2] if len(chars) >= 3 else ""
+    s4 = "".join(chars[3:]) if len(chars) >= 4 else ""
+    return [s1, s2, s3, s4]
+
+
+# Build text configs dict dynamically
+text_configs_dict: Dict[str, List[Dict]] = {}
+
+for cid, meta in character_meta.items():
+    name = meta.get("name") or cid
+    color = tuple(meta.get("color") or WHITE)
+    segments = _segments_from_name(name)
+    template = POS_TEMPLATES.get(cid, FALLBACK_TEMPLATE)
+
+    configs: List[Dict] = []
+    for idx, tpl in enumerate(template):
+        seg_text = segments[idx] if idx < len(segments) else ""
+        seg_color = color if idx == 0 else WHITE
+        configs.append({
+            "text": seg_text,
+            "position": tpl["position"],
+            "font_color": seg_color,
+            "font_size": tpl["font_size"],
+        })
+    text_configs_dict[cid] = configs

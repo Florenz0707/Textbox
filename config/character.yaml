@@ -1,0 +1,50 @@
+# Characters configuration (new schema)
+# Runtime order is lexicographic by english id (the keys below).
+# `font` is optional; default is font3.ttf.
+
+character:
+  alisa:
+    name: "紫藤亚里沙"
+    color: [235, 75, 60]
+  anan:
+    name: "夏目安安"
+    color: [159, 145, 251]
+  coco:
+    name: "泽渡可可"
+    color: [251, 114, 78]
+  ema:
+    name: "樱羽艾玛"
+    color: [253, 145, 175]
+  hanna:
+    name: "远野汉娜"
+    color: [169, 199, 30]
+  hiro:
+    name: "二阶堂希罗"
+    color: [239, 79, 84]
+  mago:
+    name: "宝生玛格"
+    color: [185, 124, 235]
+  meruru:
+    name: "冰上梅露露"
+    color: [227, 185, 175]
+  miria:
+    name: "佐伯米莉亚"
+    color: [235, 207, 139]
+  momoi:
+    name: "才羽桃井"
+    color: [255, 105, 80]
+  nanoka:
+    name: "黑部奈叶香"
+    color: [131, 143, 147]
+  noa:
+    name: "城崎诺亚"
+    color: [104, 223, 231]
+  reia:
+    name: "莲见蕾雅"
+    color: [253, 177, 88]
+  sherri:
+    name: "橘雪莉"
+    color: [137, 177, 251]
+  yuki:
+    name: "月代雪"
+    color: [195, 209, 231]

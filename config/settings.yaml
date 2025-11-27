@@ -1,0 +1,21 @@
+# Settings overrides for Textbox (optional)
+# Remove or comment out keys you don't want to override.
+
+HOTKEY: enter
+SELECT_ALL_HOTKEY: ctrl+a
+CUT_HOTKEY: ctrl+x
+PASTE_HOTKEY: ctrl+v
+SEND_HOTKEY: enter
+
+BLOCK_HOTKEY: false
+DELAY: 0.1
+AUTO_PASTE_IMAGE: true
+AUTO_SEND_IMAGE: true
+
+WHITELIST: [TIM.exe, WeChat.exe, Weixin.exe, WeChatApp.exe, QQ.exe]
+ENABLE_WHITELIST: true
+
+BACKGROUND_NUM: 16
+
+TEXT_ST_POS: [728, 355]
+TEXT_ED_POS: [2339, 800]

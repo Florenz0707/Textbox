@@ -12,4 +12,5 @@ dependencies = [
     "pyperclip>=1.11.0",
     "pywin32>=311",
     "setuptools>=80.9.0",
+    "pyyaml>=6.0.2",
 ]
