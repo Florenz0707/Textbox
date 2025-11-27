@@ -25,8 +25,10 @@ enable_whitelist = True
 # 11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
 current_character_index = 15  # 初始角色为橘雪莉（索引从0开始）
 
-mahoshojo_postion = [728, 355]  # 文本范围起始位置
-mahoshojo_over = [2339, 800]  # 文本范围右下角位置
+background_num = 16
+
+text_st_pos = [728, 355]  # 文本范围起始位置
+text_ed_pos = [2339, 800]  # 文本范围右下角位置
 
 random_value_tmp = -1
 random_value = -1
@@ -206,7 +208,8 @@ def get_current_character():
 
 def get_current_font():
     # 返回完整的字体文件绝对路径
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), characters[get_current_character()]["font"])
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        characters[get_current_character()]["font"])
 
 
 def get_current_emotion_count():
@@ -228,23 +231,25 @@ def generate_and_save_images(character_name):
     for filename in os.listdir(magic_cut_folder):
         if filename.startswith(character_name):
             return
+
     print("正在加载")
-    for i in range(16):
-        for j in range(emotion_count):
+    for bg_idx in range(background_num):
+        for emo_idx in range(emotion_count):
             # 使用绝对路径加载背景图片和角色图片
-            background_path = os.path.join(now_file, "background", f"c{i + 1}.png")
-            overlay_path = os.path.join(now_file, character_name, f"{character_name} ({j + 1}).png")
+            background_path = os.path.join(now_file, "resource\\background", f"c{bg_idx + 1}.png")
+            overlay_path = os.path.join(now_file, f"resource\\character\\{character_name}\\{character_name} ({emo_idx + 1}).png")
 
             background = Image.open(background_path).convert("RGBA")
             overlay = Image.open(overlay_path).convert("RGBA")
 
-            img_num = j * 16 + i + 1
+            img_num = emo_idx * background_num + bg_idx + 1
             result = background.copy()
             result.paste(overlay, (0, 134), overlay)
 
             # 使用绝对路径保存生成的图片
             save_path = os.path.join(os.path.join(magic_cut_folder), f"{character_name} ({img_num}).jpg")
             result.convert("RGB").save(save_path)
+
     print("加载完成")
 
 
@@ -266,11 +271,6 @@ def switch_character(new_index):
 def show_current_character():
     character_name = get_current_character()
     print(f"当前角色: {character_name}")
-
-
-# 显示当前角色信息
-show_current_character()
-generate_and_save_images(get_current_character())
 
 
 def get_expression(idx):
@@ -354,7 +354,7 @@ def cut_all_and_get_text() -> str:
 
     # 获取剪切后的内容
     new_clip = pyperclip.paste()
-
+    pyperclip.copy(old_clip)
     return new_clip
 
 
@@ -410,10 +410,10 @@ def Start():
 
     # 文本框左上角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    text_box_top_left = (mahoshojo_postion[0], mahoshojo_postion[1])
+    text_box_top_left = (text_st_pos[0], text_st_pos[1])
     # 文本框右下角坐标 (x, y), 同时适用于图片框
     # 此值为一个二元组, 例如 (100, 150), 单位像素, 图片的左上角记为 (0, 0)
-    image_box_bottom_right = (mahoshojo_over[0], mahoshojo_over[1])
+    image_box_bottom_right = (text_ed_pos[0], text_ed_pos[1])
     text = cut_all_and_get_text()
     image = try_get_image()
 
@@ -507,6 +507,10 @@ Ctrl+Tab: 清除图片
 感谢各位的支持
 """
           )
+    # 显示当前角色信息
+    show_current_character()
+    generate_and_save_images(get_current_character())
+
     # 角色切换快捷键绑定
     # 按Ctrl+1 到 Ctrl+9: 切换角色1-9
     for random_value_tmp in range(1, 10):

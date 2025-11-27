@@ -110,7 +110,7 @@ def draw_text_auto(
                     if has_space and len(u) > 1:
                         tmp = ""
                         for ch in u:
-                            if draw.textlength(tmp + ch, font=image_font) <= max_w:
+                            if int(draw.textlength(tmp + ch, font=image_font)) <= max_w:
                                 tmp += ch
                             else:
                                 if tmp:
@@ -130,13 +130,13 @@ def draw_text_auto(
         return text_lines
 
     # --- 4. 测量 ---
-    def measure_block(lines: list[str], font: ImageFont.FreeTypeFont) -> tuple[int, int, int]:
-        ascent, descent = font.getmetrics()
+    def measure_block(text_lines: list[str], image_font: ImageFont.FreeTypeFont) -> tuple[int, int, int]:
+        ascent, descent = image_font.getmetrics()
         line_h = int((ascent + descent) * (1 + line_spacing))
         max_w = 0
-        for ln in lines:
-            max_w = max(max_w, int(draw.textlength(ln, font=font)))
-        total_h = max(line_h * max(1, len(lines)), 1)
+        for line in text_lines:
+            max_w = max(max_w, int(draw.textlength(line, font=image_font)))
+        total_h = max(line_h * max(1, len(text_lines)), 1)
         return max_w, total_h, line_h
 
     # --- 5. 搜索最大字号 ---
