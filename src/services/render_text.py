@@ -1,18 +1,19 @@
 from __future__ import annotations
+
 from pathlib import Path
 from typing import Tuple
 
-from ..utils.text_draw import draw_text_auto
 from ..config.text_configs import text_configs_dict
+from ..utils.text_draw import draw_text_auto
 
 
 def render_text_to_bytes(
-    base_image: Path,
-    rect_top_left: Tuple[int, int],
-    rect_bottom_right: Tuple[int, int],
-    text: str,
-    font_path: Path,
-    role_name: str,
+        base_image: Path,
+        rect_top_left: Tuple[int, int],
+        rect_bottom_right: Tuple[int, int],
+        text: str,
+        font_path: Path,
+        role_name: str,
 ) -> bytes:
     return draw_text_auto(
         image_source=base_image,

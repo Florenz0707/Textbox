@@ -1,5 +1,5 @@
-from pathlib import Path
 from io import BytesIO
+from pathlib import Path
 from typing import Tuple, Literal, Union
 
 from PIL import Image

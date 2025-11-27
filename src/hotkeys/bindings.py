@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Callable
+
 import keyboard
 
 from ..config.settings import HOTKEY
@@ -22,7 +24,7 @@ def bind_all(state: State, *, start_callback: Callable[[], None]) -> None:
     keyboard.add_hotkey('ctrl+e', lambda: switch_character(state, 11))  # 角色11
     keyboard.add_hotkey('ctrl+r', lambda: switch_character(state, 12))  # 角色12
     keyboard.add_hotkey('ctrl+t', lambda: switch_character(state, 15))  # 角色13（注意：原代码如此）
-    keyboard.add_hotkey('ctrl+y', lambda: switch_character(state, 0))   # 角色14（注意：原代码如此：0 -> -1）
+    keyboard.add_hotkey('ctrl+y', lambda: switch_character(state, 0))  # 角色14（注意：原代码如此：0 -> -1）
 
     # 表情 Alt+1..9
     for idx in range(1, 10):

@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import Dict, List
-from pathlib import Path
-import re
 
-from .paths import CHARACTER_DIR
+import re
+from typing import Dict, List
+
 from .loader import load_character_meta
+from .paths import CHARACTER_DIR
 
 # Default font if not specified per character in YAML
 DEFAULT_FONT = "font3.ttf"

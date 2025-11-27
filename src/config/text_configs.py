@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 from typing import Dict, List
+
+from .characters import character_meta
 
 # Dynamic text decoration builder based on character meta (name/color)
 # Keeps existing positions/font_size templates per role; falls back to a default layout.
-
-from .characters import character_meta
 
 WHITE = (255, 255, 255)
 

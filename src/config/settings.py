@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from typing import Any
 
 # Load overrides from config/settings.yaml if present
 try:
     from .loader import load_settings
+
     _ov: dict[str, Any] = load_settings()
 except Exception:
     _ov = {}
@@ -13,6 +15,7 @@ def _g(key: str, default: Any) -> Any:
     # support lower/upper case keys in yaml
     return _ov.get(key, _ov.get(key.lower(), default))
 
+
 # 热键与行为控制
 HOTKEY: str = _g("HOTKEY", "enter")
 SELECT_ALL_HOTKEY: str = _g("SELECT_ALL_HOTKEY", "ctrl+a")
@@ -21,7 +24,7 @@ PASTE_HOTKEY: str = _g("PASTE_HOTKEY", "ctrl+v")
 SEND_HOTKEY: str = _g("SEND_HOTKEY", "enter")
 
 BLOCK_HOTKEY: bool = bool(_g("BLOCK_HOTKEY", False))  # 生成热键是否阻塞
-DELAY: float = float(_g("DELAY", 0.1))                 # 操作间隔（秒）
+DELAY: float = float(_g("DELAY", 0.1))  # 操作间隔（秒）
 AUTO_PASTE_IMAGE: bool = bool(_g("AUTO_PASTE_IMAGE", True))
 AUTO_SEND_IMAGE: bool = bool(_g("AUTO_SEND_IMAGE", True))
 
@@ -37,3 +40,6 @@ _tsp = _g("TEXT_ST_POS", (728, 355))
 TEXT_ST_POS: tuple[int, int] = tuple(_tsp) if isinstance(_tsp, (list, tuple)) else (728, 355)
 _tep = _g("TEXT_ED_POS", (2339, 800))
 TEXT_ED_POS: tuple[int, int] = tuple(_tep) if isinstance(_tep, (list, tuple)) else (2339, 800)
+
+# 日志级别（DEBUG/INFO/WARNING/ERROR/CRITICAL）
+LOG_LEVEL: str = str(_g("LOG_LEVEL", "INFO")).upper()

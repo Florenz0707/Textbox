@@ -1,22 +1,23 @@
 from __future__ import annotations
+
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple
 
 from PIL import Image
 
-from ..utils.image_paste import paste_image_auto
 from ..config.text_configs import text_configs_dict
+from ..utils.image_paste import paste_image_auto
 
 
 def paste_image_to_bytes(
-    base_image: Path,
-    rect_top_left: Tuple[int, int],
-    rect_bottom_right: Tuple[int, int],
-    content_image: Image.Image,
-    *,
-    allow_upscale: bool = True,
-    keep_alpha: bool = True,
-    role_name: str,
+        base_image: Path,
+        rect_top_left: Tuple[int, int],
+        rect_bottom_right: Tuple[int, int],
+        content_image: Image.Image,
+        *,
+        allow_upscale: bool = True,
+        keep_alpha: bool = True,
+        role_name: str,
 ) -> bytes:
     return paste_image_auto(
         image_source=base_image,

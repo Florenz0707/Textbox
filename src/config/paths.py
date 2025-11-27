@@ -1,12 +1,13 @@
 from __future__ import annotations
-from pathlib import Path
+
 import os
+from pathlib import Path
 
 # Standardized project paths for Textbox
 # This file is at: src/config/paths.py
 # parents[0]=.../src/config, [1]=.../src, [2]=.../
-SRC_ROOT = Path(__file__).resolve().parents[1]       # .../src
-PROJECT_ROOT = Path(__file__).resolve().parents[2]   # repo root
+SRC_ROOT = Path(__file__).resolve().parents[1]  # .../src
+PROJECT_ROOT = Path(__file__).resolve().parents[2]  # repo root
 
 # Config directory at project root
 CONFIG_DIR = PROJECT_ROOT / "config"
