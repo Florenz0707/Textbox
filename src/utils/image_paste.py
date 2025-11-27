@@ -1,0 +1,104 @@
+from pathlib import Path
+from io import BytesIO
+from typing import Tuple, Literal, Union
+
+from PIL import Image
+
+Align = Literal["left", "center", "right"]
+VAlign = Literal["top", "middle", "bottom"]
+
+
+def paste_image_auto(
+        image_source: Union[str, Path, Image.Image],
+        top_left: Tuple[int, int],
+        bottom_right: Tuple[int, int],
+        content_image: Image.Image,
+        align: Align = "center",
+        valign: VAlign = "middle",
+        padding: int = 0,
+        allow_upscale: bool = False,
+        keep_alpha: bool = True,
+        image_overlay: Union[str, Path, Image.Image, None] = None,
+        max_image_size: Tuple[int, int] = (None, None),
+        role_name: str = "unknown",
+        text_configs_dict: dict | None = None,
+) -> bytes:
+    """
+    在指定矩形内放置一张图片（content_image），按比例缩放至“最大但不超过”该矩形。
+    返回：最终 PNG 的 bytes。
+    """
+    if not isinstance(content_image, Image.Image):
+        raise TypeError("content_image 必须为 PIL.Image.Image")
+
+    if isinstance(image_source, Image.Image):
+        img = image_source.copy()
+    else:
+        img = Image.open(image_source).convert("RGBA")
+
+    img_overlay = None
+    if image_overlay is not None:
+        if isinstance(image_overlay, Image.Image):
+            img_overlay = image_overlay.copy()
+        else:
+            overlay_path = Path(image_overlay)
+            img_overlay = Image.open(overlay_path).convert("RGBA") if overlay_path.is_file() else None
+
+    x1, y1 = top_left
+    x2, y2 = bottom_right
+    if not (x2 > x1 and y2 > y1):
+        raise ValueError("无效的粘贴区域。")
+
+    region_w = max(1, (x2 - x1) - 2 * padding)
+    region_h = max(1, (y2 - y1) - 2 * padding)
+
+    cw, ch = content_image.size
+    if cw <= 0 or ch <= 0:
+        raise ValueError("content_image 尺寸无效。")
+
+    scale_w = region_w / cw
+    scale_h = region_h / ch
+    scale = min(scale_w, scale_h)
+
+    if not allow_upscale:
+        scale = min(1.0, scale)
+
+    max_width, max_height = max_image_size
+    if max_width is not None:
+        scale_w_limit = max_width / cw
+        scale = min(scale, scale_w_limit)
+    if max_height is not None:
+        scale_h_limit = max_height / ch
+        scale = min(scale, scale_h_limit)
+
+    new_w = max(1, int(round(cw * scale)))
+    new_h = max(1, int(round(ch * scale)))
+
+    resized = content_image.resize((new_w, new_h), Image.LANCZOS)
+
+    if align == "left":
+        px = x1 + padding
+    elif align == "center":
+        px = x1 + padding + (region_w - new_w) // 2
+    else:
+        px = x2 - padding - new_w
+
+    if valign == "top":
+        py = y1 + padding
+    elif valign == "middle":
+        py = y1 + padding + (region_h - new_h) // 2
+    else:
+        py = y2 - padding - new_h
+
+    if keep_alpha and ("A" in resized.getbands()):
+        img.paste(resized, (px, py), resized)
+    else:
+        img.paste(resized, (px, py))
+
+    if image_overlay is not None and img_overlay is not None:
+        img.paste(img_overlay, (0, 0), img_overlay)
+    elif image_overlay is not None and img_overlay is None:
+        print("Warning: overlay image is not exist.")
+
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
