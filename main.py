@@ -1,16 +1,17 @@
+import getpass
 import io
 import os
 import random
 import time
-import getpass
+
 import keyboard
 import psutil
 import pyperclip
-import win32clipboard
-import win32gui
-import win32process
-
 from PIL import Image
+from win32 import win32clipboard
+from win32 import win32gui
+from win32 import win32process
+
 from image_fit_paste import paste_image_auto
 from text_fit_draw import draw_text_auto
 
@@ -269,6 +270,7 @@ def show_current_character():
 
 # 显示当前角色信息
 show_current_character()
+generate_and_save_images(get_current_character())
 
 
 def get_expression(idx):
@@ -396,7 +398,7 @@ def get_window_exe_name():
 
 
 def Start():
-    if enable_whitelist and get_window_exe_name() not in whitelist:
+    if not enable_whitelist or get_window_exe_name() not in whitelist:
         keyboard.send(HOTKEY)
         return
 
