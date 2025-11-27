@@ -24,7 +24,7 @@ try:
         TEXT_ST_POS,
         TEXT_ED_POS,
     )
-    from .config.characters import characters
+    from .config.characters import characters, character_list, character_meta
     from .config.paths import cache_file, font_path
     from .hotkeys.bindings import bind_all
     from .services.generator import (
@@ -56,7 +56,7 @@ except Exception:
         TEXT_ST_POS,
         TEXT_ED_POS,
     )
-    from src.config.characters import characters
+    from src.config.characters import characters, character_list, character_meta
     from src.config.paths import cache_file, font_path
     from src.hotkeys.bindings import bind_all
     from src.services.generator import (
@@ -77,32 +77,43 @@ except Exception:
     from src.services.render_text import render_text_to_bytes
 
 
+def _build_banner() -> str:
+    # 角色说明（按英文 id 排序的 character_list）
+    role_lines = []
+    for idx, cid in enumerate(character_list, start=1):
+        name = character_meta.get(cid, {}).get("name", cid)
+        role_lines.append(f"- {idx}\t{name} ({cid})")
+
+    # 快捷键说明（保持通用，不对特定索引的特殊键逐一罗列）
+    hotkey_lines = [
+        f"- {HOTKEY} 自动生成图片并发送（是否发送取决于配置）",
+        "- Ctrl+1..9 切换前9个角色",
+        "- Alt+1..9 切换本次表情",
+        "- Ctrl+0 查看当前角色",
+        "- Ctrl+Tab 清除已加载的图片缓存",
+        "- Esc 退出",
+    ]
+
+    paste_send = []
+    if AUTO_PASTE_IMAGE:
+        paste_send.append(f"自动粘贴: {PASTE_HOTKEY}")
+    if AUTO_SEND_IMAGE:
+        paste_send.append(f"自动发送: {SEND_HOTKEY}")
+    paste_send_str = ("（" + "，".join(paste_send) + "）") if paste_send else ""
+
+    banner = (
+        "角色说明:\n" +
+        "\n".join(role_lines) +
+        "\n\n快捷键说明:\n" +
+        "\n".join(hotkey_lines) +
+        (f"\n\n当前配置：{paste_send_str}" if paste_send_str else "") +
+        "\n\n程序说明：\n首次更换角色需预加载，需等待数秒；清除缓存后建议重启。\n感谢支持。\n"
+    )
+    return banner
+
 
 def _print_banner() -> None:
-    print(
-        """角色说明:
-1为樱羽艾玛，2为二阶堂希罗，3为橘雪莉，4为远野汉娜
-5为夏目安安，6为月代雪，7为冰上梅露露，8为城崎诺亚，9为莲见蕾雅，10为佐伯米莉亚
-11为黑部奈叶香，12为宝生玛格，13为紫藤亚里沙，14为泽渡可可
-
-快捷键说明:
-Ctrl+1 到 Ctrl+9: 切换角色1-9
-Ctrl+q: 切换角色10
-Ctrl+w: 切换角色11
-Ctrl+e: 切换角色12
-Ctrl+r: 切换角色13
-Ctrl+t: 切换角色14
-Ctrl+0: 显示当前角色
-Alt+1-9: 切换表情1-9(部分角色表情较少 望大家谅解)
-Enter: 生成图片
-Esc: 退出程序
-Ctrl+Tab: 清除图片
-
-程序说明：
-首次更换角色需预加载，需等待数秒；清除缓存后建议重启。
-感谢支持。
-"""
-    )
+    print(_build_banner())
 
 
 def _start_callback(state: State) -> None:
