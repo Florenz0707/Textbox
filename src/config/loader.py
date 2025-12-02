@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple, Dict, Any
+from typing import Any, Dict, Tuple
 
 import yaml
 
@@ -11,7 +11,7 @@ from .paths import CONFIG_DIR
 def _read_yaml(path: Path) -> dict:
     if not path.exists():
         return {}
-    with path.open('r', encoding='utf-8') as f:
+    with path.open("r", encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
     if not isinstance(data, dict):
         raise ValueError(f"Invalid YAML structure in {path}")
@@ -52,21 +52,31 @@ def load_character_meta() -> Tuple[Dict[str, Dict[str, Any]], list[str]]:
                 color_t = tuple(int(x) for x in color)
             else:
                 color_t = (255, 255, 255)
-            meta[cid] = {"name": str(name) if name is not None else cid, "color": color_t,
-                         "font": str(font) if font else None}
+            meta[cid] = {
+                "name": str(name) if name is not None else cid,
+                "color": color_t,
+                "font": str(font) if font else None,
+            }
     else:
         # Backward compatibility (old schemas)
         if "characters" in data and isinstance(data["characters"], dict):
             raw = data["characters"]
             for cid, cfg in raw.items():
                 font = (cfg or {}).get("font")
-                meta[cid] = {"name": cid, "color": (255, 255, 255), "font": str(font) if font else None}
+                meta[cid] = {
+                    "name": cid,
+                    "color": (255, 255, 255),
+                    "font": str(font) if font else None,
+                }
         else:
             # Top-level mapping heuristic
             for cid, cfg in data.items():
                 if isinstance(cfg, dict):
-                    meta[cid] = {"name": cid, "color": (255, 255, 255),
-                                 "font": str(cfg.get("font")) if cfg.get("font") else None}
+                    meta[cid] = {
+                        "name": cid,
+                        "color": (255, 255, 255),
+                        "font": str(cfg.get("font")) if cfg.get("font") else None,
+                    }
 
     # Order by english id lexicographically
     order = sorted(meta.keys())

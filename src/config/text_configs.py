@@ -136,10 +136,12 @@ for cid, meta in character_meta.items():
     for idx, tpl in enumerate(template):
         seg_text = segments[idx] if idx < len(segments) else ""
         seg_color = color if idx == 0 else WHITE
-        configs.append({
-            "text": seg_text,
-            "position": tpl["position"],
-            "font_color": seg_color,
-            "font_size": tpl["font_size"],
-        })
+        configs.append(
+            {
+                "text": seg_text,
+                "position": tpl["position"],
+                "font_color": seg_color,
+                "font_size": tpl["font_size"],
+            }
+        )
     text_configs_dict[cid] = configs

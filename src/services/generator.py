@@ -1,17 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Tuple, Set
+from typing import Set, Tuple
 
 from PIL import Image
 
-from ..config.characters import characters, character_list
-from ..config.paths import (
-    BACKGROUND_DIR,
-    CHARACTER_DIR,
-    CACHE_DIR,
-    cache_file,
-)
+from ..config.characters import character_list, characters
+from ..config.paths import BACKGROUND_DIR, CACHE_DIR, CHARACTER_DIR, cache_file
 from ..config.settings import BACKGROUND_NUM
 
 
@@ -65,7 +60,10 @@ def adjust_bg(state: State, delta: int) -> None:
 
 def ensure_character_prepared(character_name: str) -> None:
     # 若缓存中已有该角色文件前缀，视为已生成
-    if any(p.name.startswith(f"{character_name}_") for p in CACHE_DIR.glob(f"{character_name}_*.png")):
+    if any(
+        p.name.startswith(f"{character_name}_")
+        for p in CACHE_DIR.glob(f"{character_name}_*.png")
+    ):
         return
     generate_and_save_images(character_name)
 
@@ -82,7 +80,9 @@ def generate_and_save_images(character_name: str) -> None:
         background = Image.open(background_path).convert("RGBA")
 
         for emo_idx in range(1, emotion_count + 1):
-            overlay_path = CHARACTER_DIR / character_name / f"{character_name} ({emo_idx}).png"
+            overlay_path = (
+                CHARACTER_DIR / character_name / f"{character_name} ({emo_idx}).png"
+            )
             if not overlay_path.is_file():
                 continue
             overlay = Image.open(overlay_path).convert("RGBA")

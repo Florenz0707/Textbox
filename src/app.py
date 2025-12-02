@@ -12,75 +12,35 @@ if __name__ == "__main__" and __package__ is None:
         sys.path.insert(0, str(project_root))
 
 # Prefer relative imports; fallback to absolute
-try:
-    import logging
-    from .utils.logging_setup import setup_logging
-    from .config.settings import (
-        AUTO_PASTE_IMAGE,
-        AUTO_SEND_IMAGE,
-        PASTE_HOTKEY,
-        SEND_HOTKEY,
-        TEXT_ST_POS,
-        TEXT_ED_POS,
-        ENABLE_WHITELIST,
-        WHITELIST,
-        BLOCK_HOTKEY,
-    )
-    from .config.characters import characters, character_list, character_meta
-    from .config.paths import cache_file, font_path
-    from .services.generator import (
-        State,
-        get_current_character,
-        ensure_character_prepared,
-        get_selection,
-    )
-    from .io.keys import send
-    from .io.clipboard import (
-        try_get_image,
-        copy_png_bytes_to_clipboard,
-        cut_all_and_get_text,
-        cut_all_capture,
-    )
-    from .io.window import get_foreground_exe_name
-    from .services.paste_image import paste_image_to_bytes
-    from .services.render_text import render_text_to_bytes
-    from .ui.tui import run_tui
-    import pyperclip
-    import keyboard
-except Exception:
-    import logging
-    from src.utils.logging_setup import setup_logging
-    from src.config.settings import (
-        AUTO_PASTE_IMAGE,
-        AUTO_SEND_IMAGE,
-        PASTE_HOTKEY,
-        SEND_HOTKEY,
-        TEXT_ST_POS,
-        TEXT_ED_POS,
-        ENABLE_WHITELIST,
-        WHITELIST,
-        BLOCK_HOTKEY,
-    )
-    from src.config.characters import characters, character_list, character_meta
-    from src.config.paths import cache_file, font_path
-    from src.services.generator import (
-        State,
-        get_current_character,
-        ensure_character_prepared,
-        get_selection,
-    )
-    from src.io.keys import send
-    from src.io.clipboard import (
-        try_get_image,
-        copy_png_bytes_to_clipboard,
-        cut_all_and_get_text,
-    )
-    from src.io.window import get_foreground_exe_name
-    from src.services.paste_image import paste_image_to_bytes
-    from src.services.render_text import render_text_to_bytes
-    from src.ui.tui import run_tui
-    import pyperclip
-    import keyboard
+import logging
+
+import keyboard
+
+from src.config.characters import character_list, character_meta, characters
+from src.config.paths import cache_file, font_path
+from src.config.settings import (
+    AUTO_PASTE_IMAGE,
+    AUTO_SEND_IMAGE,
+    BLOCK_HOTKEY,
+    ENABLE_WHITELIST,
+    PASTE_HOTKEY,
+    SEND_HOTKEY,
+    TEXT_ED_POS,
+    TEXT_ST_POS,
+    WHITELIST,
+)
+from src.io.clipboard import copy_png_bytes_to_clipboard, cut_all_capture
+from src.io.keys import send
+from src.io.window import get_foreground_exe_name
+from src.services.generator import (
+    State,
+    ensure_character_prepared,
+    get_current_character,
+    get_selection,
+)
+from src.services.paste_image import paste_image_to_bytes
+from src.services.render_text import render_text_to_bytes
+from src.utils.logging_setup import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +76,8 @@ def _build_banner() -> str:
         "- Q：退出",
         "",
         f"全局发送热键：{SEND_HOTKEY}（白名单：{wl}）",
-        f"生成后：自动粘贴={AUTO_PASTE_IMAGE}({PASTE_HOTKEY})，自动发送={AUTO_SEND_IMAGE}({SEND_HOTKEY})",
+        f"生成后：自动粘贴={AUTO_PASTE_IMAGE}({PASTE_HOTKEY})，",
+        f"自动发送={AUTO_SEND_IMAGE}({SEND_HOTKEY})",
         "",
         "提示：请先在 TUI 中按 C 确认角色完成预加载，然后到聊天窗口按发送热键触发生成。",
     ]
@@ -132,7 +93,13 @@ def _generate_with_current_selection(state: State) -> str | None:
 
     expr, bg = get_selection(state)
     baseimage_file = cache_file(character_name, expr, bg)
-    logger.info("开始生成: role=%s expr=%d bg=%d base=%s", character_name, expr, bg, baseimage_file)
+    logger.info(
+        "开始生成: role=%s expr=%d bg=%d base=%s",
+        character_name,
+        expr,
+        bg,
+        baseimage_file,
+    )
 
     rect_top_left = TEXT_ST_POS
     rect_bottom_right = TEXT_ED_POS
@@ -148,8 +115,12 @@ def _generate_with_current_selection(state: State) -> str | None:
 
     if image is not None:
         try:
-            logger.info("图片输入: size=%dx%d mode=%s", getattr(image, "width", -1), getattr(image, "height", -1),
-                        getattr(image, "mode", "unknown"))
+            logger.info(
+                "图片输入: size=%dx%d mode=%s",
+                getattr(image, "width", -1),
+                getattr(image, "height", -1),
+                getattr(image, "mode", "unknown"),
+            )
         except Exception:
             pass
     elif text:
@@ -218,9 +189,13 @@ def _global_send_callback(state: State):
 
 
 def _setup_global_send_hotkey(state: State) -> None:
-    suppress_flag = True if (BLOCK_HOTKEY or True) else False  # 发送热键一律抑制，避免原始回车提前发送
+    suppress_flag = (
+        True if (BLOCK_HOTKEY or True) else False
+    )  # 发送热键一律抑制，避免原始回车提前发送
     try:
-        keyboard.add_hotkey(SEND_HOTKEY, lambda: _global_send_callback(state), suppress=suppress_flag)
+        keyboard.add_hotkey(
+            SEND_HOTKEY, lambda: _global_send_callback(state), suppress=suppress_flag
+        )
         logger.info("已注册全局发送热键: %s (suppress=%s)", SEND_HOTKEY, suppress_flag)
     except Exception as e:
         logger.exception("注册全局发送热键失败: %s", e)

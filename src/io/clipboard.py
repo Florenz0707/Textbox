@@ -8,8 +8,8 @@ import pyperclip
 from PIL import Image
 from win32 import win32clipboard
 
+from ..config.settings import CUT_HOTKEY, DELAY, SELECT_ALL_HOTKEY
 from .keys import send
-from ..config.settings import SELECT_ALL_HOTKEY, CUT_HOTKEY, DELAY
 
 
 def _open_clipboard_with_retry(retries: int = 15, delay: float = 0.08) -> bool:
@@ -67,7 +67,11 @@ def try_get_image() -> Optional[Image.Image]:
             data = win32clipboard.GetClipboardData(win32clipboard.CF_DIB)
             if data:
                 bmp_data = data
-                header = b'BM' + (len(bmp_data) + 14).to_bytes(4, 'little') + b'\x00\x00\x00\x00\x36\x00\x00\x00'
+                header = (
+                    b"BM"
+                    + (len(bmp_data) + 14).to_bytes(4, "little")
+                    + b"\x00\x00\x00\x00\x36\x00\x00\x00"
+                )
                 image = Image.open(io.BytesIO(header + bmp_data))
                 return image
     except Exception as e:
@@ -104,7 +108,11 @@ def cut_all_capture() -> Tuple[str, Optional[Image.Image]]:
                 data = win32clipboard.GetClipboardData(win32clipboard.CF_DIB)
                 if data:
                     bmp_data = data
-                    header = b'BM' + (len(bmp_data) + 14).to_bytes(4, 'little') + b'\x00\x00\x00\x00\x36\x00\x00\x00'
+                    header = (
+                        b"BM"
+                        + (len(bmp_data) + 14).to_bytes(4, "little")
+                        + b"\x00\x00\x00\x00\x36\x00\x00\x00"
+                    )
                     image = Image.open(io.BytesIO(header + bmp_data))
         except Exception:
             image = None

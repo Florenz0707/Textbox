@@ -1,6 +1,6 @@
 from io import BytesIO
 from pathlib import Path
-from typing import Tuple, Literal, Union
+from typing import Literal, Tuple, Union
 
 from PIL import Image
 
@@ -9,19 +9,19 @@ VAlign = Literal["top", "middle", "bottom"]
 
 
 def paste_image_auto(
-        image_source: Union[str, Path, Image.Image],
-        top_left: Tuple[int, int],
-        bottom_right: Tuple[int, int],
-        content_image: Image.Image,
-        align: Align = "center",
-        valign: VAlign = "middle",
-        padding: int = 0,
-        allow_upscale: bool = False,
-        keep_alpha: bool = True,
-        image_overlay: Union[str, Path, Image.Image, None] = None,
-        max_image_size: Tuple[int, int] = (None, None),
-        role_name: str = "unknown",
-        text_configs_dict: dict | None = None,
+    image_source: Union[str, Path, Image.Image],
+    top_left: Tuple[int, int],
+    bottom_right: Tuple[int, int],
+    content_image: Image.Image,
+    align: Align = "center",
+    valign: VAlign = "middle",
+    padding: int = 0,
+    allow_upscale: bool = False,
+    keep_alpha: bool = True,
+    image_overlay: Union[str, Path, Image.Image, None] = None,
+    max_image_size: Tuple[int, int] = (None, None),
+    role_name: str = "unknown",
+    text_configs_dict: dict | None = None,
 ) -> bytes:
     """
     在指定矩形内放置一张图片（content_image），按比例缩放至“最大但不超过”该矩形。
@@ -41,7 +41,11 @@ def paste_image_auto(
             img_overlay = image_overlay.copy()
         else:
             overlay_path = Path(image_overlay)
-            img_overlay = Image.open(overlay_path).convert("RGBA") if overlay_path.is_file() else None
+            img_overlay = (
+                Image.open(overlay_path).convert("RGBA")
+                if overlay_path.is_file()
+                else None
+            )
 
     x1, y1 = top_left
     x2, y2 = bottom_right

@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import psutil
-from win32 import win32gui
-from win32 import win32process
+from win32 import win32gui, win32process
 
 
 def get_foreground_exe_name() -> str | None:

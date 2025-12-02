@@ -1,6 +1,6 @@
 from io import BytesIO
 from pathlib import Path
-from typing import Tuple, Union, Literal
+from typing import Literal, Tuple, Union
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -13,7 +13,7 @@ IMAGE_SETTINGS = {
     "max_width": 1200,
     "max_height": 800,
     "quality": 65,
-    "resize_ratio": 0.7
+    "resize_ratio": 0.7,
 }
 
 
@@ -36,20 +36,20 @@ def compress_image(image: Image.Image) -> Image.Image:
 
 
 def draw_text_auto(
-        image_source: Union[str, Path, Image.Image],
-        top_left: Tuple[int, int],
-        bottom_right: Tuple[int, int],
-        text: str,
-        color: Tuple[int, int, int] = (0, 0, 0),
-        max_font_height: int | None = None,
-        font_path: Union[str, Path, None] | None = None,
-        align: Align = "center",
-        valign: VAlign = "middle",
-        line_spacing: float = 0.15,
-        bracket_color: Tuple[int, int, int] = (137, 177, 251),  # 中括号及内部内容颜色
-        image_overlay: Union[str, Path, Image.Image, None] = None,
-        role_name: str = "unknown",  # 添加角色名称参数
-        text_configs_dict: dict | None = None,  # 添加文字配置字典参数
+    image_source: Union[str, Path, Image.Image],
+    top_left: Tuple[int, int],
+    bottom_right: Tuple[int, int],
+    text: str,
+    color: Tuple[int, int, int] = (0, 0, 0),
+    max_font_height: int | None = None,
+    font_path: Union[str, Path, None] | None = None,
+    align: Align = "center",
+    valign: VAlign = "middle",
+    line_spacing: float = 0.15,
+    bracket_color: Tuple[int, int, int] = (137, 177, 251),  # 中括号及内部内容颜色
+    image_overlay: Union[str, Path, Image.Image, None] = None,
+    role_name: str = "unknown",  # 添加角色名称参数
+    text_configs_dict: dict | None = None,  # 添加文字配置字典参数
 ) -> bytes:
     """
     在指定矩形内自适应字号绘制文本；
@@ -71,7 +71,11 @@ def draw_text_auto(
             img_overlay = image_overlay.copy()
         else:
             overlay_path = Path(image_overlay)
-            img_overlay = Image.open(overlay_path).convert("RGBA") if overlay_path.is_file() else None
+            img_overlay = (
+                Image.open(overlay_path).convert("RGBA")
+                if overlay_path.is_file()
+                else None
+            )
 
     x1, y1 = top_left
     x2, y2 = bottom_right
@@ -89,10 +93,12 @@ def draw_text_auto(
             return ImageFont.load_default()
 
     # --- 3. 文本包行 ---
-    def wrap_lines(txt: str, image_font: ImageFont.FreeTypeFont, max_w: int) -> list[str]:
+    def wrap_lines(
+        txt: str, image_font: ImageFont.FreeTypeFont, max_w: int
+    ) -> list[str]:
         text_lines: list[str] = []
         for para in txt.splitlines() or [""]:
-            has_space = (" " in para)
+            has_space = " " in para
             units = para.split(" ") if has_space else list(para)
             str_buf = ""
 
@@ -132,7 +138,9 @@ def draw_text_auto(
         return text_lines
 
     # --- 4. 测量 ---
-    def measure_block(text_lines: list[str], image_font: ImageFont.FreeTypeFont) -> tuple[int, int, int]:
+    def measure_block(
+        text_lines: list[str], image_font: ImageFont.FreeTypeFont
+    ) -> tuple[int, int, int]:
         ascent, descent = image_font.getmetrics()
         line_h = int((ascent + descent) * (1 + line_spacing))
         max_w = 0
@@ -165,13 +173,17 @@ def draw_text_auto(
         font = _load_font(best_size)
 
     # --- 6. 解析着色片段 ---
-    def parse_color_segments(s: str, _in_bracket: bool) -> Tuple[list[tuple[str, Tuple[int, int, int]]], bool]:
+    def parse_color_segments(
+        s: str, _in_bracket: bool
+    ) -> Tuple[list[tuple[str, Tuple[int, int, int]]], bool]:
         text_segments: list[tuple[str, Tuple[int, int, int]]] = []
         str_buf = ""
         for ch in s:
             if ch == "[" or ch == "【":
                 if str_buf:
-                    text_segments.append((str_buf, bracket_color if _in_bracket else color))
+                    text_segments.append(
+                        (str_buf, bracket_color if _in_bracket else color)
+                    )
                     str_buf = ""
                 text_segments.append((ch, bracket_color))
                 _in_bracket = True
@@ -209,7 +221,9 @@ def draw_text_auto(
         segments, in_bracket = parse_color_segments(ln, in_bracket)
         for seg_text, seg_color in segments:
             if seg_text:
-                draw.text((x + 4, y + 4), seg_text, font=font, fill=(0, 0, 0))  # 文字阴影
+                draw.text(
+                    (x + 4, y + 4), seg_text, font=font, fill=(0, 0, 0)
+                )  # 文字阴影
                 draw.text((x, y), seg_text, font=font, fill=seg_color)
                 x += int(draw.textlength(seg_text, font=font))
         y += best_line_h
@@ -238,7 +252,10 @@ def draw_text_auto(
             role_font = ImageFont.truetype(str(role_font_path), font_size)
 
             # 计算阴影位置
-            shadow_position = (position[0] + shadow_offset[0], position[1] + shadow_offset[1])
+            shadow_position = (
+                position[0] + shadow_offset[0],
+                position[1] + shadow_offset[1],
+            )
 
             # 先绘制阴影文字
             draw.text(shadow_position, role_text, fill=shadow_color, font=role_font)

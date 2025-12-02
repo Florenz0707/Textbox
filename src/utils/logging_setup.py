@@ -34,10 +34,12 @@ def setup_logging() -> Logger:
     level = _to_level(LOG_LEVEL)
     logger.setLevel(level)
 
-    fmt = logging.Formatter(fmt='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
-                            datefmt='%Y-%m-%d %H:%M:%S')
+    fmt = logging.Formatter(
+        fmt="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
 
-    fh = logging.FileHandler(str(log_file), mode='w', encoding='utf-8')
+    fh = logging.FileHandler(str(log_file), mode="w", encoding="utf-8")
     fh.setLevel(level)
     fh.setFormatter(fmt)
 

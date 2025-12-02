@@ -29,7 +29,9 @@ AUTO_PASTE_IMAGE: bool = bool(_g("AUTO_PASTE_IMAGE", True))
 AUTO_SEND_IMAGE: bool = bool(_g("AUTO_SEND_IMAGE", True))
 
 # 白名单（前台窗口进程名）
-WHITELIST: list[str] = list(_g("WHITELIST", ["TIM.exe", "WeChat.exe", "Weixin.exe", "WeChatApp.exe", "QQ.exe"]))
+WHITELIST: list[str] = list(
+    _g("WHITELIST", ["TIM.exe", "WeChat.exe", "Weixin.exe", "WeChatApp.exe", "QQ.exe"])
+)
 ENABLE_WHITELIST: bool = bool(_g("ENABLE_WHITELIST", True))
 
 # 资源与生成
@@ -37,9 +39,13 @@ BACKGROUND_NUM: int = int(_g("BACKGROUND_NUM", 16))
 
 # 文本区域（像素坐标）
 _tsp = _g("TEXT_ST_POS", (728, 355))
-TEXT_ST_POS: tuple[int, int] = tuple(_tsp) if isinstance(_tsp, (list, tuple)) else (728, 355)
+TEXT_ST_POS: tuple[int, int] = (
+    tuple(_tsp) if isinstance(_tsp, (list, tuple)) else (728, 355)
+)
 _tep = _g("TEXT_ED_POS", (2339, 800))
-TEXT_ED_POS: tuple[int, int] = tuple(_tep) if isinstance(_tep, (list, tuple)) else (2339, 800)
+TEXT_ED_POS: tuple[int, int] = (
+    tuple(_tep) if isinstance(_tep, (list, tuple)) else (2339, 800)
+)
 
 # 日志级别（DEBUG/INFO/WARNING/ERROR/CRITICAL）
 LOG_LEVEL: str = str(_g("LOG_LEVEL", "INFO")).upper()

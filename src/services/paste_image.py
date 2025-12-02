@@ -10,14 +10,14 @@ from ..utils.image_paste import paste_image_auto
 
 
 def paste_image_to_bytes(
-        base_image: Path,
-        rect_top_left: Tuple[int, int],
-        rect_bottom_right: Tuple[int, int],
-        content_image: Image.Image,
-        *,
-        allow_upscale: bool = True,
-        keep_alpha: bool = True,
-        role_name: str,
+    base_image: Path,
+    rect_top_left: Tuple[int, int],
+    rect_bottom_right: Tuple[int, int],
+    content_image: Image.Image,
+    *,
+    allow_upscale: bool = True,
+    keep_alpha: bool = True,
+    role_name: str,
 ) -> bytes:
     return paste_image_auto(
         image_source=base_image,
