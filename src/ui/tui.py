@@ -5,11 +5,10 @@ import os
 import time
 from typing import Callable
 
-from ..config.characters import character_list, character_meta, characters
+from ..config.characters import character_list, character_meta
 from ..config.settings import (
     AUTO_PASTE_IMAGE,
     AUTO_SEND_IMAGE,
-    BACKGROUND_NUM,
     PASTE_HOTKEY,
     SEND_HOTKEY,
 )
@@ -17,7 +16,11 @@ from ..services.generator import (
     State,
     adjust_bg,
     adjust_expr,
+    get_current_background_files,
+    get_current_background_name,
     get_current_character,
+    get_current_expression_files,
+    get_current_expression_name,
     set_role,
 )
 
@@ -40,19 +43,27 @@ def _render(state: State, status: str | None = None) -> None:
     meta = character_meta.get(cid, {})
     name = meta.get("name", cid)
     total_roles = len(character_list)
-    emo_total = int(characters.get(cid, {}).get("emotion_count", 0))
+
+    expr_files = get_current_expression_files(state)
+    bg_files = get_current_background_files()
+    expr_total = len(expr_files)
+    bg_total = len(bg_files)
+
+    expr_name = get_current_expression_name(state) or "(无)"
+    bg_name = get_current_background_name(state) or "(无)"
+    expr_index = state.selected_expr_index + 1 if expr_total > 0 else 0
+    bg_index = state.selected_bg_index + 1 if bg_total > 0 else 0
 
     print("文本框生成器（TUI 模式）")
     print("—" * 40)
     print(
-        f"配置：自动粘贴={AUTO_PASTE_IMAGE}({PASTE_HOTKEY})，自动发送={AUTO_SEND_IMAGE}({SEND_HOTKEY})，背景总数={BACKGROUND_NUM}"
+        f"配置：自动粘贴={AUTO_PASTE_IMAGE}({PASTE_HOTKEY})，自动发送={AUTO_SEND_IMAGE}({SEND_HOTKEY})"
     )
     print(
         f"当前：角色[{state.selected_role_index + 1}/{total_roles}] {name} ({cid})  确认={'是' if (cid in state.confirmed_roles) else '否'}"
     )
-    print(
-        f"      表情[{state.selected_expr}/{max(emo_total, 1)}]  背景[{state.selected_bg}/{BACKGROUND_NUM}]"
-    )
+    print(f"      表情[{expr_index}/{expr_total}] {expr_name}")
+    print(f"      背景[{bg_index}/{bg_total}] {bg_name}")
     print("—" * 40)
     print("操作：")
     for line in KEY_HELP:

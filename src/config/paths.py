@@ -28,9 +28,20 @@ def font_path(font_file: str) -> Path:
     return FONT_DIR / font_file
 
 
-def compose_name(character: str, expr: int, bg: int) -> str:
-    return f"{character}_{expr}_{bg}.png"
+def get_background_files() -> list[str]:
+    """Return sorted list of PNG filenames (without extension) from background directory, ordered lexicographically."""
+    if not BACKGROUND_DIR.is_dir():
+        return []
+    return sorted([p.stem for p in BACKGROUND_DIR.glob("*.png")])
 
 
-def cache_file(character: str, expr: int, bg: int) -> Path:
-    return CACHE_DIR / compose_name(character, expr, bg)
+def compose_name(character: str, expr_name: str, bg_name: str) -> str:
+    """Generate cache filename from character, expression filename, and background filename."""
+    # Sanitize filenames to avoid issues with special characters
+    safe_expr = expr_name.replace(" ", "_").replace("(", "").replace(")", "")
+    safe_bg = bg_name.replace(" ", "_").replace("(", "").replace(")", "")
+    return f"{character}_{safe_expr}_{safe_bg}.png"
+
+
+def cache_file(character: str, expr_name: str, bg_name: str) -> Path:
+    return CACHE_DIR / compose_name(character, expr_name, bg_name)

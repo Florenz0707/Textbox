@@ -49,3 +49,6 @@ TEXT_ED_POS: tuple[int, int] = (
 
 # 日志级别（DEBUG/INFO/WARNING/ERROR/CRITICAL）
 LOG_LEVEL: str = str(_g("LOG_LEVEL", "INFO")).upper()
+
+# 默认字体文件名
+DEFAULT_FONT: str = str(_g("DEFAULT_FONT", "font3.ttf"))

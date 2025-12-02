@@ -91,13 +91,13 @@ def _generate_with_current_selection(state: State) -> str | None:
         logger.warning(msg)
         return msg
 
-    expr, bg = get_selection(state)
-    baseimage_file = cache_file(character_name, expr, bg)
+    expr_name, bg_name = get_selection(state)
+    baseimage_file = cache_file(character_name, expr_name, bg_name)
     logger.info(
-        "开始生成: role=%s expr=%d bg=%d base=%s",
+        "开始生成: role=%s expr=%s bg=%s base=%s",
         character_name,
-        expr,
-        bg,
+        expr_name,
+        bg_name,
         baseimage_file,
     )
 

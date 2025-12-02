@@ -8,8 +8,8 @@ import pyperclip
 from PIL import Image
 from win32 import win32clipboard
 
-from ..config.settings import CUT_HOTKEY, DELAY, SELECT_ALL_HOTKEY
 from .keys import send
+from ..config.settings import CUT_HOTKEY, DELAY, SELECT_ALL_HOTKEY
 
 
 def _open_clipboard_with_retry(retries: int = 15, delay: float = 0.08) -> bool:

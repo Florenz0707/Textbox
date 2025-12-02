@@ -5,6 +5,7 @@ from typing import Literal, Tuple, Union
 from PIL import Image, ImageDraw, ImageFont
 
 from ..config.paths import FONT_DIR
+from ..config.settings import DEFAULT_FONT
 
 Align = Literal["left", "center", "right"]
 VAlign = Literal["top", "middle", "bottom"]
@@ -87,6 +88,10 @@ def draw_text_auto(
     def _load_font(size: int) -> ImageFont.FreeTypeFont:
         if font_path and Path(font_path).exists():
             return ImageFont.truetype(str(font_path), size=size)
+        # 如果指定的字体不存在，尝试使用配置的默认字体
+        default_font_path = FONT_DIR / DEFAULT_FONT
+        if default_font_path.exists():
+            return ImageFont.truetype(str(default_font_path), size=size)
         try:
             return ImageFont.truetype("DejaVuSans.ttf", size=size)
         except Exception:
@@ -247,9 +252,24 @@ def draw_text_auto(
             font_color = config["font_color"]
             font_size = config["font_size"]
 
-            # 使用 resource/font 下的字体
-            role_font_path = FONT_DIR / "font3.ttf"
-            role_font = ImageFont.truetype(str(role_font_path), font_size)
+            # 使用 resource/font 下的字体（使用配置的默认字体）
+            role_font_path = FONT_DIR / DEFAULT_FONT
+            if not role_font_path.exists():
+                # 如果配置的字体不存在，尝试使用其他可用字体作为后备
+                fallback_fonts = ["font3.ttf", "Song.ttf", "Yahei.ttf"]
+                role_font_path = None
+                for fallback in fallback_fonts:
+                    test_path = FONT_DIR / fallback
+                    if test_path.exists():
+                        role_font_path = test_path
+                        break
+                if role_font_path is None:
+                    # 如果所有字体都不存在，使用系统默认字体
+                    role_font = ImageFont.load_default()
+                else:
+                    role_font = ImageFont.truetype(str(role_font_path), font_size)
+            else:
+                role_font = ImageFont.truetype(str(role_font_path), font_size)
 
             # 计算阴影位置
             shadow_position = (

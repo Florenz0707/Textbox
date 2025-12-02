@@ -3,7 +3,7 @@ LOG_LEVEL: INFO
 
 SEND_HOTKEY: enter
 
-BLOCK_HOTKEY: false
+BLOCK_HOTKEY: true
 DELAY: 0.5
 AUTO_PASTE_IMAGE: true
 AUTO_SEND_IMAGE: true
@@ -11,7 +11,7 @@ AUTO_SEND_IMAGE: true
 WHITELIST: [TIM.exe, WeChat.exe, Weixin.exe, WeChatApp.exe, QQ.exe]
 ENABLE_WHITELIST: true
 
-BACKGROUND_NUM: 16
-
 TEXT_ST_POS: [728, 355]
 TEXT_ED_POS: [2339, 800]
+
+DEFAULT_FONT: ZhongSong.ttf
